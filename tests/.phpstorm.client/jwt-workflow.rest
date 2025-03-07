@@ -1,0 +1,76 @@
+### Login request
+POST http://localhost:8000/api/user/auth/login
+Accept: application/json
+Content-Type: application/json
+
+{
+    "email": "user@example.com",
+    "password": "password"
+}
+
+> {%
+client.test('Response status OK', function () {
+    client.assert(response.status === 200, "Response status is not 200, received " + response.status)
+})
+
+client.test("Response content-type is json", function() {
+    var type = response.contentType.mimeType;
+    client.assert(type === "application/json", "Expected 'application/json' but received '" + type + "'");
+});
+
+client.test("Jwt token present in body", function() {
+    client.assert(response.body.hasOwnProperty("access"), "Cannot find 'access' property response");
+});
+
+client.test("Jwt token present in body", function() {
+    client.assert(response.body.access.hasOwnProperty("token"), "Cannot find 'access.token' property response");
+});
+
+client.log(response);
+client.global.set("jwt_token", response.body.access.token);
+%}
+
+### Refresh token request
+POST http://localhost:8000/api/user/auth/refresh
+Accept: application/json
+Authorization: Bearer {{jwt_token}}
+
+> {%
+client.test('Response status OK', function () {
+    client.assert(response.status === 200, "Response status is not 200, received " + response.status)
+})
+
+client.test("Response content-type is json", function() {
+    var type = response.contentType.mimeType;
+    client.assert(type === "application/json", "Expected 'application/json' but received '" + type + "'");
+});
+
+client.test("Jwt token present in body", function() {
+    client.assert(response.body.hasOwnProperty("token"), "Cannot find 'token' property response");
+});
+
+client.log("JWT Token: " + response.body.token);
+// client.global.set("jwt_token", response.body.token);
+%}
+
+### Logout request
+POST http://localhost:8000/api/user/auth/logout
+Accept: application/json
+Authorization: Bearer {{jwt_token}}
+
+> {%
+client.test('Response status OK', function () {
+    client.assert(response.status === 200, "Response status is not 200, received " + response.status)
+})
+
+client.test("Response content-type is json", function() {
+    var type = response.contentType.mimeType;
+    client.assert(type === "application/json", "Expected 'application/json' but received '" + type + "'");
+});
+
+client.test("Message present in body", function() {
+    client.assert(response.body.hasOwnProperty("message"), "Cannot find 'token' property response");
+});
+
+client.log("Message" + response.body.message);
+%}

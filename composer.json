@@ -1,0 +1,64 @@
+{
+    "name": "jekk0/jwt-auth",
+    "description": "JSON Web Token Authentication for Laravel and Lumen",
+    "keywords": [
+        "laravel",
+        "jwt",
+        "json web token",
+        "auth",
+        "authentication"
+    ],
+    "homepage": "https://github.com/jekk0/jwt-auth",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "jekk0",
+            "homepage": "https://github.com/jekk0",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*",
+        "ext-sodium": "*",
+        "firebase/php-jwt": "^6.10",
+        "illuminate/console": "^11.0|^12.0",
+        "illuminate/contracts": "^11.0|^12.0",
+        "illuminate/database": "^11.0|^12.0",
+        "illuminate/support": "^11.0|^12.0"
+    },
+    "require-dev": {
+        "barryvdh/laravel-ide-helper": "^3.3",
+        "friendsofphp/php-cs-fixer": "^3.65",
+        "infection/infection": "^0.29.14",
+        "larastan/larastan": "3.0",
+        "orchestra/testbench": "^9.8",
+        "phpunit/phpunit": "^11.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jekk0\\JwtAuth\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Jekk0\\JwtAuth\\Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Jekk0\\JwtAuth\\JwtAuthServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true,
+        "allow-plugins": {
+            "infection/extension-installer": false
+        }
+    }
+}

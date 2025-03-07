@@ -1,0 +1,19 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": [
+            "src"
+        ],
+        "excludes": [
+            "JwtAuthServiceProvider.php",
+        ]
+    },
+    "logs": {
+        "html": "./var/infection/infection.html",
+    },
+    "tmpDir": "./var/infection/tmp",
+    "minCoveredMsi": 99,
+    "mutators": {
+        "@default": true,
+    },
+}

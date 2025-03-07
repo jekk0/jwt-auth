@@ -1,0 +1,4 @@
+providers:
+  - Jekk0\JwtAuth\JwtAuthServiceProvider
+migrations:
+  - database/migrations
