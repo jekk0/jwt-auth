@@ -31,19 +31,18 @@ final class JwtAuthServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // todo duplicate
-        $this->publishesMigrations([
-            __DIR__ . '/../database/migrations' => database_path('migrations')
-        ]);
-
-        $this->publishes([
-            __DIR__ . '/../config/jwtauth.php' => config_path('jwtauth.php')
-        ]);
-
         if ($this->app->runningInConsole()) {
-            $this->commands([
-                GenerateCertificates::class
+
+            $publishesMigrationsMethod = method_exists($this, 'publishesMigrations')
+                ? 'publishesMigrations'
+                : 'publishes';
+
+            $this->$publishesMigrationsMethod([
+                __DIR__ . '/../database/migrations' => database_path('migrations')
             ]);
+
+            $this->publishes([__DIR__ . '/../config/jwtauth.php' => config_path('jwtauth.php')]);
+            $this->commands([GenerateCertificates::class]);
         }
 
         $this->configureGuard();
