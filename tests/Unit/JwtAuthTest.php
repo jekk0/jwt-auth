@@ -2,7 +2,6 @@
 
 namespace Jekk0\JwtAuth\Tests\Unit;
 
-use Carbon\FactoryImmutable;
 use Illuminate\Auth\EloquentUserProvider;
 use Jekk0\JwtAuth\Contracts\RefreshTokenRepository;
 use Jekk0\JwtAuth\Contracts\TokenManager as TokenManagerContract;
@@ -11,6 +10,7 @@ use Jekk0\JwtAuth\Payload;
 use Jekk0\JwtAuth\Token;
 use Jekk0\JwtAuth\TokenManager;
 use Jekk0\JwtAuth\TokenPair;
+use Lcobucci\Clock\SystemClock;
 use PHPUnit\Framework\TestCase;
 use Workbench\App\Models\User;
 
@@ -128,7 +128,7 @@ class JwtAuthTest extends TestCase
         ]);
 
         $tokenManager = new TokenManager(
-            FactoryImmutable::getDefaultInstance(),
+            SystemClock::fromUTC(),
             [
                 'public_key' => 'iVUKxPqZFLMD/MLONKvXMA47Yk4uUqzSgHAHSEiBRjQ=',
                 'private_key' => 'BO2A8TxpH/g3TJqL2udi4lkDumzI6kXoz2o/NC2dRaOJVQrE+pkUswP8ws40q9cwDjtiTi5SrNKAcAdISIFGNA==',
@@ -164,7 +164,7 @@ class JwtAuthTest extends TestCase
             'jti' => ''
         ]);
         $tokenManager = new TokenManager(
-            FactoryImmutable::getDefaultInstance(),
+            SystemClock::fromUTC(),
             [
                 'public_key' => 'iVUKxPqZFLMD/MLONKvXMA47Yk4uUqzSgHAHSEiBRjQ=',
                 'private_key' => 'BO2A8TxpH/g3TJqL2udi4lkDumzI6kXoz2o/NC2dRaOJVQrE+pkUswP8ws40q9cwDjtiTi5SrNKAcAdISIFGNA==',

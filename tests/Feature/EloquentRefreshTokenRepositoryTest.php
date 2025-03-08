@@ -13,25 +13,35 @@ class EloquentRefreshTokenRepositoryTest extends TestCase
     use RefreshDatabase;
     use WithWorkbench;
 
+    protected function defineEnvironment($app): void
+    {
+        $app['config']->set([
+            'app.key' => 'D61EMLTbWd/1wRN5LeYq5G94jBcEVF/x1xeIOgjoWNc=',
+            'database.default' => 'testing',
+        ]);
+    }
+
     public function test_create(): void
     {
-        $jti = 'zxcvbn';
+        $jti = '01JNV3HSGK8TSR3TFAYN2VBQ6F';
+        $accessTokenJti = '01JNV3HSGKSWAQFYVN56G84AC3';
         $subject = 'subject';
         $expiredAt = new \DateTimeImmutable();
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 0);
 
-        (new EloquentRefreshTokenRepository())->create($jti, $subject, $expiredAt);
+        (new EloquentRefreshTokenRepository())->create($jti, $accessTokenJti, $subject, $expiredAt);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
     }
 
     public function test_delete(): void
     {
-        $jti = 'zxcvbn';
+        $jti = '01JNV3HSGK8TSR3TFAYN2VBQ6F';
+        $accessTokenJti = '01JNV3HSGKSWAQFYVN56G84AC3';
         $subject = 'subject';
         $expiredAt = new \DateTimeImmutable();
-        (new EloquentRefreshTokenRepository())->create($jti, $subject, $expiredAt);
+        (new EloquentRefreshTokenRepository())->create($jti, $accessTokenJti, $subject, $expiredAt);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
 
@@ -44,9 +54,24 @@ class EloquentRefreshTokenRepositoryTest extends TestCase
     {
         $subject = 'subject';
         $expiredAt = new \DateTimeImmutable();
-        (new EloquentRefreshTokenRepository())->create('1', $subject, $expiredAt);
-        (new EloquentRefreshTokenRepository())->create('2', $subject, $expiredAt);
-        (new EloquentRefreshTokenRepository())->create('3', 'other-subject', $expiredAt);
+        (new EloquentRefreshTokenRepository())->create(
+            '01JNV3HSGKE0ZJ44GBB299WD6S',
+            '01JNV3HSGMD3MZRSDY3WJV2DD2',
+            $subject,
+            $expiredAt
+        );
+        (new EloquentRefreshTokenRepository())->create(
+            '01JNV3HSGK48FMGCHNW2BSWSY3',
+            '01JNV3HSGMWBQWZNQW93RJ12Y9',
+            $subject,
+            $expiredAt
+        );
+        (new EloquentRefreshTokenRepository())->create(
+            '01JNV3HSGK1MZ7EYTQ7N8Q9V0M',
+            '01JNV3HSGMZ26F430Y6VA1FECP',
+            'other-subject',
+            $expiredAt
+        );
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 3);
 

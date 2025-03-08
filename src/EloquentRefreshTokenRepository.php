@@ -7,9 +7,15 @@ use Jekk0\JwtAuth\Model\JwtRefreshToken;
 
 final class EloquentRefreshTokenRepository implements RefreshTokenRepositoryContract
 {
-    public function create(string $jti, int|string $subject, \DateTimeImmutable $expired_at): void
-    {
-        JwtRefreshToken::create(['jti' => $jti, 'sub' => $subject, 'expired_at' => $expired_at]);
+    public function create(
+        string $jti,
+        string $accessTokenJti,
+        int|string $subject,
+        \DateTimeImmutable $expired_at
+    ): void {
+        JwtRefreshToken::create(
+            ['jti' => $jti, 'access_token_jti' => $accessTokenJti, 'sub' => $subject, 'expired_at' => $expired_at]
+        );
     }
 
     public function delete(string $jti): void

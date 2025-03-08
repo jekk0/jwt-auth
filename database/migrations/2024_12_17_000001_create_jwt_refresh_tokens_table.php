@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('jwt_refresh_tokens', function (Blueprint $table) {
             $table->char('jti', 26)->primary(false);
+            $table->char('access_token_jti', 26)->index();
             $table->string('sub', 36);
             $table->timestamp('expired_at');
             $table->timestamps();

@@ -32,8 +32,8 @@ final class TokenManager implements TokenManagerContract
         $now = $this->clock->now();
         $accessTokenExpiredAt = $this->getExpirationTime($now, TokenType::Access);
         $refreshTokenExpiredAt = $this->getExpirationTime($now, TokenType::Refresh);
-        $accessTokenId = Str::ulid()->toString();
-        $refreshTokenId = Str::ulid()->toString();
+        $accessTokenId = (string)Str::ulid();
+        $refreshTokenId = (string)Str::ulid();
 
         $payload = [
             'iss' => $this->tokenIssuer,

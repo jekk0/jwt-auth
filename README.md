@@ -123,7 +123,7 @@ Schedule::command('model:prune', ['--model' => [JwtRefreshToken::class]])->daily
 
 ## Customization
 
-### Add custom claims to jwt token
+### Customize JWT token payload
 
 To add custom claims to a JWT token, you need to implement the interface `Jekk0\JwtAuth\Contracts\JwtCustomClaims`
 
@@ -150,7 +150,10 @@ class User extends Authenticatable implements JwtCustomClaims
 }
 ```
 
-### Using custom token jwt extractor instead default (Authorization: Bearer)
+### Customize JWT extractor
+
+By implementing a custom extractor (default `Authorization: Bearer`), you can retrieve the JWT token from alternative locations 
+such as request headers, query parameters or even custom request attributes.
 
 ```shell
 php artisan make:provider CustomJwtTokenExtractor
@@ -159,23 +162,71 @@ php artisan make:provider CustomJwtTokenExtractor
 ```php
 // file /app/Providers/CustomJwtTokenExtractor.php
 
+<?php
+
+namespace App\Providers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\ServiceProvider;
 use Jekk0\JwtAuth\Contracts\TokenExtractor;
 
 class CustomJwtTokenExtractor extends ServiceProvider
 {
-    /**
-     * Register services.
-     */
     public function register(): void
     {
-        $this->app->bind(TokenExtractor::class, static function(Request $request): ?string {
-            return $request->header('X-API-TOKEN');
+        $this->app->bind(TokenExtractor::class, function () {
+            return new class implements TokenExtractor {
+                public function __invoke(Request $request): ?string
+                {
+                    return $request->header('X-API-TOKEN');
+                }
+            };
         });
     }
+    
+    public function boot(): void
+    {
+        //
+    }
+}
+}
 
-    /**
-     * Bootstrap services.
-     */
+```
+
+### Customize JWT token issuer
+
+By default, the JWT token issuer is taken from the request URL.
+To change this behavior, override the binding for `TokenIssuer` as shown in the example below:
+
+```shell
+php artisan make:provider CustomJwtTokenIssuer
+```
+
+```php
+// file /app/Providers/CustomJwtTokenIssuer.php
+
+<?php
+
+namespace App\Providers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\ServiceProvider;
+use Jekk0\JwtAuth\Contracts\TokenIssuer;
+
+class CustomJwtTokenIssuer extends ServiceProvider
+{
+    public function register(): void
+    {
+        $this->app->bind(TokenIssuer::class, function () {
+            return new class implements TokenIssuer {
+                public function __invoke(Request $request): string
+                {
+                    return 'CustomIssuer';
+                }
+            };
+        });
+    }
+    
     public function boot(): void
     {
         //
@@ -184,12 +235,65 @@ class CustomJwtTokenExtractor extends ServiceProvider
 
 ```
 
-Events
+### Customize JWT clock
+
+If there is a need to generate JWT tokens while considering the time zone or to 
+modify the time-related parameters of the token in any way, you can achieve this 
+by replacing the default binding. This allows you to customize how timestamps, expiration times,
+or issued-at claims (iat, exp, nbf) are handled within the token.
+
+```shell
+php artisan make:provider CustomJwtClock
+```
+
+```php
+// file /app/Providers/CustomJwtTokenIssuer.php
+
+<?php
+
+namespace App\Providers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\ServiceProvider;
+use Jekk0\JwtAuth\Contracts\JwtClock;
+
+class CustomJwtTokenIssuer extends ServiceProvider
+{
+    public function register(): void
+    {
+        $this->app->bind(JwtClock::class, function () {
+            return new class implements JwtClock {
+                public function now(): DateTimeImmutable {
+                    return new \DateTimeImmutable("now", "UTC")                
+                }     
+            };
+        });
+    }
+    
+    public function boot(): void
+    {
+        //
+    }
+}
+
+```
+
+### Available events
+
+1. Jekk0\JwtAuth\Events\JwtAttempting
+2. Jekk0\JwtAuth\Events\JwtAuthenticated
+3. Jekk0\JwtAuth\Events\JwtFailed 
+4. Jekk0\JwtAuth\Events\JwtLogin 
+5. Jekk0\JwtAuth\Events\JwtLogout 
+6. Jekk0\JwtAuth\Events\JwtLogoutFromAllDevices 
+7. Jekk0\JwtAuth\Events\JwtRefresh 
+8. Jekk0\JwtAuth\Events\JwtValidated
+
 ```php
 
 ```
 
-strict token rules for access token 
+strict token rules for access token
 
 # Development
 
