@@ -2,7 +2,6 @@
 
 namespace Jekk0\JwtAuth;
 
-use Carbon\FactoryImmutable;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
@@ -12,6 +11,9 @@ use Jekk0\JwtAuth\Contracts\TokenExtractor as TokenExtractorContract;
 use Jekk0\JwtAuth\Contracts\TokenIssuer as TokenIssuerContract;
 use Jekk0\JwtAuth\Contracts\RequestGuard as RequestGuardContract;
 use Jekk0\JwtAuth\Contracts\TokenManager as TokenManagerContract;
+use Jekk0\JwtAuth\Contracts\JwtClock as JwtClockContract;
+use Lcobucci\Clock\SystemClock;
+
 
 final class JwtAuthServiceProvider extends ServiceProvider
 {
@@ -21,21 +23,22 @@ final class JwtAuthServiceProvider extends ServiceProvider
             $this->mergeConfigFrom(__DIR__ . '/../config/jwtauth.php', 'jwtauth');
         }
 
-        $this->app->singleton(TokenManagerContract::class, function (Application $app) {
-            return new TokenManager(FactoryImmutable::getDefaultInstance(), $app['config']['jwtauth']);
-        });
-
         $this->app->bind(TokenExtractorContract::class, TokenExtractor::class);
         $this->app->bind(TokenIssuerContract::class, TokenIssuer::class);
+        $this->app->bind(JwtClockContract::class, static function () {
+            return new SystemClock(new \DateTimeZone('UTC'));
+        });
+
+        $this->app->singleton(TokenManagerContract::class, static function (Application $app) {
+            return new TokenManager($app->get(JwtClockContract::class), $app['config']['jwtauth']);
+        });
     }
 
     public function boot(): void
     {
         if ($this->app->runningInConsole()) {
-
-            $publishesMigrationsMethod = method_exists($this, 'publishesMigrations')
-                ? 'publishesMigrations'
-                : 'publishes';
+            $publishesMigrationsMethod =
+                method_exists($this, 'publishesMigrations') ? 'publishesMigrations' : 'publishes';
 
             $this->$publishesMigrationsMethod([
                 __DIR__ . '/../database/migrations' => database_path('migrations')
@@ -59,10 +62,7 @@ final class JwtAuthServiceProvider extends ServiceProvider
                         $tokenManager,
                         $auth->createUserProvider($config['provider']),
                         new EloquentRefreshTokenRepository()
-                    ),
-                    $app->get(TokenExtractorContract::class),
-                    $app->get('events'),
-                    $app->get('request')
+                    ), $app->get(TokenExtractorContract::class), $app->get('events'), $app->get('request')
                 );
 
                 return tap($guard, function (RequestGuardContract $guard) {

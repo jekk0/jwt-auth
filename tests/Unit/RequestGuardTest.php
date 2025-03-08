@@ -1,6 +1,6 @@
 <?php
 
-namespace Jekk0\JwtAuth\Tests\Feature;
+namespace Jekk0\JwtAuth\Tests\Unit;
 
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\Events\Dispatcher;

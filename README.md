@@ -189,8 +189,9 @@ Events
 
 ```
 
-strict token rules for access token 
-
+strict token rules for access token
+JwtClockContract
+TokenIssuerContract
 # Development
 
 Run tests
