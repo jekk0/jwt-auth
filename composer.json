@@ -30,8 +30,8 @@
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.3",
         "friendsofphp/php-cs-fixer": "^3.65",
-        "infection/infection": "^0.29.14",
-        "larastan/larastan": "3.0",
+        "infection/infection": "^0.29",
+        "larastan/larastan": "^2.0|^3.0",
         "orchestra/testbench": "^9.8",
         "phpunit/phpunit": "^11.5"
     },
