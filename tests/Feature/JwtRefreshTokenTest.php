@@ -13,6 +13,14 @@ class JwtRefreshTokenTest extends TestCase
     use RefreshDatabase;
     use WithWorkbench;
 
+    protected function defineEnvironment($app): void
+    {
+        $app['config']->set([
+            'app.key' => 'D61EMLTbWd/1wRN5LeYq5G94jBcEVF/x1xeIOgjoWNc=',
+            'database.default' => 'testing',
+        ]);
+    }
+
     public function test_prunable_action(): void
     {
         JwtRefreshToken::create(['jti' => '1', 'sub' => 'a', 'expired_at' => now()->subDay()]);

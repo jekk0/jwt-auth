@@ -13,6 +13,14 @@ class EloquentRefreshTokenRepositoryTest extends TestCase
     use RefreshDatabase;
     use WithWorkbench;
 
+    protected function defineEnvironment($app): void
+    {
+        $app['config']->set([
+            'app.key' => 'D61EMLTbWd/1wRN5LeYq5G94jBcEVF/x1xeIOgjoWNc=',
+            'database.default' => 'testing',
+        ]);
+    }
+
     public function test_create(): void
     {
         $jti = 'zxcvbn';
