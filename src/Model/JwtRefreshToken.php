@@ -20,6 +20,7 @@ final class JwtRefreshToken extends Model
 
     protected $fillable = [
         'jti',
+        'access_token_jti',
         'sub',
         'expired_at',
     ];

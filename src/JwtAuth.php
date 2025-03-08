@@ -23,6 +23,7 @@ final class JwtAuth implements JwtAuthContract
 
         $this->refreshTokenRepository->create(
             jti: $tokenPair->refresh->payload->getJwtId(),
+            accessTokenJti: $tokenPair->access->payload->getJwtId(),
             subject: $tokenPair->refresh->payload->getSubject(),
             expired_at: new \DateTimeImmutable("@{$tokenPair->refresh->payload->getExpiriedAt()}"),
         );

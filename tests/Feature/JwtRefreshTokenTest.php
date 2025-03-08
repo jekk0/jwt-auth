@@ -23,9 +23,30 @@ class JwtRefreshTokenTest extends TestCase
 
     public function test_prunable_action(): void
     {
-        JwtRefreshToken::create(['jti' => '1', 'sub' => 'a', 'expired_at' => now()->subDay()]);
-        JwtRefreshToken::create(['jti' => '2', 'sub' => 'b', 'expired_at' => now()->subWeek()]);
-        JwtRefreshToken::create(['jti' => '3', 'sub' => 'c', 'expired_at' => now()->addDay()]);
+        JwtRefreshToken::create(
+            [
+                'jti' => '01JNV3PEN545PQPN6FQC8F6C39',
+                'access_token_jti' =>'01JNV3Q6DEF81VT704ZEX2ADXX',
+                'sub' => 'a',
+                'expired_at' => now()->subDay()
+            ]
+        );
+        JwtRefreshToken::create(
+            [
+                'jti' => '01JNV3PEN5V6HWPJJ65MHG9KGQ',
+                'access_token_jti' =>'01JNV3Q6DEJCKYX6C0B2838KNQ',
+                'sub' => 'b',
+                'expired_at' => now()->subWeek()
+            ]
+        );
+        JwtRefreshToken::create(
+            [
+                'jti' => '01JNV3PEN5193ED0H2HWHVMY7J',
+                'access_token_jti' =>'01JNV3Q6DE1T6SAW6ERFAFQ59B',
+                'sub' => 'c',
+                'expired_at' => now()->addDay()
+            ]
+        );
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 3);
 
@@ -33,8 +54,10 @@ class JwtRefreshTokenTest extends TestCase
 
         self::assertSame(2, $count);
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
-        self::assertSame('3', JwtRefreshToken::find(3)->jti);
-        self::assertSame('c', JwtRefreshToken::find(3)->sub);
+        $token = JwtRefreshToken::find('01JNV3PEN5193ED0H2HWHVMY7J');
+        self::assertSame('01JNV3PEN5193ED0H2HWHVMY7J', $token->jti);
+        self::assertSame('01JNV3Q6DE1T6SAW6ERFAFQ59B', $token->access_token_jti);
+        self::assertSame('c', $token->sub);
     }
 
     public function test_prunable_builder(): void

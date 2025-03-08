@@ -122,10 +122,11 @@ class JwtAuthTest extends TestCase
 
     public function test_revoke_refresh_token(): void
     {
-        $jti = 'zxcvbn';
+        $jti = '01JNV3HSGK8TSR3TFAYN2VBQ6F';
+        $accessTokenJti = '01JNV3HSGKSWAQFYVN56G84AC3';
         $subject = 'subject';
         $expiredAt = new \DateTimeImmutable();
-        (new EloquentRefreshTokenRepository())->create($jti, $subject, $expiredAt);
+        (new EloquentRefreshTokenRepository())->create($jti, $accessTokenJti, $subject, $expiredAt);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
 
@@ -138,9 +139,9 @@ class JwtAuthTest extends TestCase
     {
         $user = UserFactory::new()->create();
         $expiredAt = new \DateTimeImmutable();
-        (new EloquentRefreshTokenRepository())->create('1', $user->id, $expiredAt);
-        (new EloquentRefreshTokenRepository())->create('2', $user->id, $expiredAt);
-        (new EloquentRefreshTokenRepository())->create('3', 'other-subject', $expiredAt);
+        (new EloquentRefreshTokenRepository())->create('1', '4', $user->id, $expiredAt);
+        (new EloquentRefreshTokenRepository())->create('2', '5', $user->id, $expiredAt);
+        (new EloquentRefreshTokenRepository())->create('3', '6', 'other-subject', $expiredAt);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 3);
 
