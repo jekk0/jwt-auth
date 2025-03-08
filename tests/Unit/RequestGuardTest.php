@@ -25,7 +25,6 @@ use Workbench\App\Models\User;
 
 class RequestGuardTest extends TestCase
 {
-
     public function test_attempt(): void
     {
         $credentials = ['email' => 'example.com', 'password' => '123456'];
@@ -378,7 +377,7 @@ class RequestGuardTest extends TestCase
             new Payload(['jti' => 'QWERT', 'sub' => $user->id, 'exp' => time(), 'rfi' => 'UUAI', 'ttp' => TokenType::Refresh->value])
         );
         $auth = $this->createMock(JwtAuth::class);
-//        $auth->expects($this->once())->method('decodeToken')->with($refreshToken->token)->willReturn($refreshToken);
+        //        $auth->expects($this->once())->method('decodeToken')->with($refreshToken->token)->willReturn($refreshToken);
         $auth->expects($this->any())->method('decodeToken')->with($refreshToken->token)->willReturn($refreshToken);
         $auth->expects($this->never())->method('retrieveByPayload');
 
@@ -462,24 +461,24 @@ class RequestGuardTest extends TestCase
 
         self::assertFalse($result);
     }
-//
-//    public function test_check(): void
-//    {
-//    }
-//
-//    public function test_guest(): void
-//    {
-//    }
-//
-//    public function test_id(): void
-//    {
-//    }
-//
-//    public function test_set_user(): void
-//    {
-//    }
-//
-//    public function test_set_request(): void
-//    {
-//    }
+    //
+    //    public function test_check(): void
+    //    {
+    //    }
+    //
+    //    public function test_guest(): void
+    //    {
+    //    }
+    //
+    //    public function test_id(): void
+    //    {
+    //    }
+    //
+    //    public function test_set_user(): void
+    //    {
+    //    }
+    //
+    //    public function test_set_request(): void
+    //    {
+    //    }
 }

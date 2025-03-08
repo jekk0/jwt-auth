@@ -29,7 +29,7 @@ class JwtRefreshTokenTest extends TestCase
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 3);
 
-        $count = (new JwtRefreshToken)->pruneAll();
+        $count = (new JwtRefreshToken())->pruneAll();
 
         self::assertSame(2, $count);
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
@@ -39,7 +39,7 @@ class JwtRefreshTokenTest extends TestCase
 
     public function test_prunable_builder(): void
     {
-        $result = (new JwtRefreshToken)->prunable();
+        $result = (new JwtRefreshToken())->prunable();
 
         self::assertInstanceOf(Builder::class, $result);
     }

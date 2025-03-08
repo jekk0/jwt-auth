@@ -6,5 +6,4 @@ use Psr\Clock\ClockInterface;
 
 interface JwtClock extends ClockInterface
 {
-
 }

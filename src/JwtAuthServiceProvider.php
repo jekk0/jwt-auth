@@ -14,7 +14,6 @@ use Jekk0\JwtAuth\Contracts\TokenManager as TokenManagerContract;
 use Jekk0\JwtAuth\Contracts\JwtClock as JwtClockContract;
 use Lcobucci\Clock\SystemClock;
 
-
 final class JwtAuthServiceProvider extends ServiceProvider
 {
     public function register(): void
@@ -37,8 +36,9 @@ final class JwtAuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if ($this->app->runningInConsole()) {
-            $publishesMigrationsMethod =
-                method_exists($this, 'publishesMigrations') ? 'publishesMigrations' : 'publishes';
+            /** @phpstan-ignore function.alreadyNarrowedType */
+            $publishesMigrationsMethod = method_exists($this, 'publishesMigrations')
+                ? 'publishesMigrations' : 'publishes';
 
             $this->$publishesMigrationsMethod([
                 __DIR__ . '/../database/migrations' => database_path('migrations')
@@ -62,7 +62,10 @@ final class JwtAuthServiceProvider extends ServiceProvider
                         $tokenManager,
                         $auth->createUserProvider($config['provider']),
                         new EloquentRefreshTokenRepository()
-                    ), $app->get(TokenExtractorContract::class), $app->get('events'), $app->get('request')
+                    ),
+                    $app->get(TokenExtractorContract::class),
+                    $app->get('events'),
+                    $app->get('request')
                 );
 
                 return tap($guard, function (RequestGuardContract $guard) {
