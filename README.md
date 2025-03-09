@@ -235,12 +235,12 @@ class CustomJwtTokenIssuer extends ServiceProvider
 
 ```
 
-### Customize JWT clock
+### Customize leeway
 
-If there is a need to generate JWT tokens while considering the time zone or to 
-modify the time-related parameters of the token in any way, you can achieve this 
-by replacing the default binding. This allows you to customize how timestamps, expiration times,
+If there is a need to generate JWT tokens while taking leeway into account, you can achieve this
+by replacing the default `JwtClock` binding. This allows you to customize how timestamps, expiration times,
 or issued-at claims (iat, exp, nbf) are handled within the token.
+
 
 ```shell
 php artisan make:provider CustomJwtClock
@@ -264,7 +264,7 @@ class CustomJwtTokenIssuer extends ServiceProvider
         $this->app->bind(JwtClock::class, function () {
             return new class implements JwtClock {
                 public function now(): DateTimeImmutable {
-                    return new \DateTimeImmutable("now", "UTC")                
+                    return new DateTimeImmutable('now', new \DateTimeZone('UTC'));                
                 }     
             };
         });
@@ -294,6 +294,7 @@ class CustomJwtTokenIssuer extends ServiceProvider
 ```
 
 strict token rules for access token
+Testing with JWT
 
 # Development
 

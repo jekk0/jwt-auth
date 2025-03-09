@@ -26,7 +26,7 @@ class JwtRefreshTokenTest extends TestCase
         JwtRefreshToken::create(
             [
                 'jti' => '01JNV3PEN545PQPN6FQC8F6C39',
-                'access_token_jti' =>'01JNV3Q6DEF81VT704ZEX2ADXX',
+                'access_token_jti' => '01JNV3Q6DEF81VT704ZEX2ADXX',
                 'sub' => 'a',
                 'expired_at' => now()->subDay()
             ]
@@ -34,7 +34,7 @@ class JwtRefreshTokenTest extends TestCase
         JwtRefreshToken::create(
             [
                 'jti' => '01JNV3PEN5V6HWPJJ65MHG9KGQ',
-                'access_token_jti' =>'01JNV3Q6DEJCKYX6C0B2838KNQ',
+                'access_token_jti' => '01JNV3Q6DEJCKYX6C0B2838KNQ',
                 'sub' => 'b',
                 'expired_at' => now()->subWeek()
             ]
@@ -42,7 +42,7 @@ class JwtRefreshTokenTest extends TestCase
         JwtRefreshToken::create(
             [
                 'jti' => '01JNV3PEN5193ED0H2HWHVMY7J',
-                'access_token_jti' =>'01JNV3Q6DE1T6SAW6ERFAFQ59B',
+                'access_token_jti' => '01JNV3Q6DE1T6SAW6ERFAFQ59B',
                 'sub' => 'c',
                 'expired_at' => now()->addDay()
             ]

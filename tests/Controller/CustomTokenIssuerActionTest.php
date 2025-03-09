@@ -6,17 +6,33 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Jekk0\JwtAuth\Contracts\TokenIssuer;
 use Jekk0\JwtAuth\Contracts\TokenManager;
-use Jekk0\JwtAuth\Model\JwtRefreshToken;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use Workbench\App\Models\User;
 use Workbench\Database\Factories\UserFactory;
 
-class LoginActionTest extends TestCase
+class CustomTokenIssuerActionTest extends TestCase
 {
     use RefreshDatabase;
     use WithWorkbench;
+
+    protected function setUp(): void
+    {
+        $this->afterApplicationCreated(function () {
+            $this->app->bind(TokenIssuer::class, function () {
+                return new class () implements TokenIssuer {
+                    public function __invoke(Request $request): string
+                    {
+                        return 'JwtAuthIssuer';
+                    }
+                };
+            });
+        });
+
+        parent::setUp();
+    }
 
     protected function defineEnvironment($app): void
     {
@@ -42,7 +58,7 @@ class LoginActionTest extends TestCase
         });
     }
 
-    public function test_login_by_valid_credentials(): void
+    public function test_authenticate_with_custom_issuer(): void
     {
         $password = '12345678';
         $user = UserFactory::new()->create(['password' => Hash::make($password)]);
@@ -55,35 +71,10 @@ class LoginActionTest extends TestCase
         self::assertSame(200, $response->getStatusCode());
         $json = $response->json();
 
-        // Access token acceptance
-        $this->assertArrayHasKey('token', $json['access']);
-        $this->assertArrayHasKey('expiredAt', $json['access']);
-
         $access = $this->app->get(TokenManager::class)->decode($json['access']['token']);
-        self::assertSame($user->id, $access->payload->getSubject());
-        self::assertSame('http://localhost/api/login', $access->payload->getIssuer());
-
-        // Refresh token acceptance
-        $this->assertArrayHasKey('token', $json['refresh']);
-        $this->assertArrayHasKey('expiredAt', $json['refresh']);
+        self::assertSame('JwtAuthIssuer', $access->payload->getIssuer());
 
         $refresh = $this->app->get(TokenManager::class)->decode($json['refresh']['token']);
-        self::assertSame($user->id, $refresh->payload->getSubject());
-        self::assertSame('http://localhost/api/login', $refresh->payload->getIssuer());
-
-        $this->assertDatabaseCount(JwtRefreshToken::class, 1);
-    }
-
-    public function test_login_by_invalid_credentials(): void
-    {
-        $user = UserFactory::new()->create();
-
-        $response = $this->postJson(
-            '/api/login',
-            ['origin' => config('app.url'), 'email' => $user->email, 'password' => 'invalid-password']
-        );
-
-        self::assertSame(401, $response->getStatusCode());
-        self::assertSame(['message' => 'Unauthenticated.'], $response->json());
+        self::assertSame('JwtAuthIssuer', $refresh->payload->getIssuer());
     }
 }
