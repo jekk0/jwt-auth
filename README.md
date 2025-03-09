@@ -41,6 +41,9 @@ to environment variables in another way.
 ```shell
 php artisan jwtauth:generate-certificates --show
 ```
+
+---
+
 ## Laravel application configuration
 
 ### Configure auth guard
@@ -122,7 +125,45 @@ allowing it to expire naturally. However, if token invalidation needs to be enfo
 this can be implemented using an event-based mechanism.
 
 ```php
+php artisan make:listener JwtAccessTokenInvalidation
+```
 
+```php
+<?php
+
+namespace App\Listeners;
+
+use Illuminate\Auth\AuthenticationException;
+use Jekk0\JwtAuth\Events\JwtAccessTokenDecoded;
+use Jekk0\JwtAuth\Model\JwtRefreshToken;
+
+class JwtAccessTokenInvalidation
+{
+
+    public function handle(JwtAccessTokenDecoded $event): void
+    {
+        // Solution 1
+        $accessTokenId = $event->accessToken->payload->getJwtId();
+        $refreshToken = JwtRefreshToken::whereAccessTokenJti($accessTokenId)->first();
+
+        if ($refreshToken === null) {
+            throw new AuthenticationException();
+        }
+        
+        // Solution 2
+        // $refreshTokenId = $event->accessToken->payload->getReferenceTokenId();
+        // $refreshToken = JwtRefreshToken::find($refreshTokenId);
+        //
+        // if ($refreshToken === null) {
+        //     throw new AuthenticationException();
+        // }
+
+        // Solution 3
+        // If you do not want to use a relational database, you can implement token invalidation using two events:
+        // 1. On Logout (JwtLogout Event) – Store the access token in a blacklist for its remaining lifetime using a fast storage solution, such as Redis or MongoDB.
+        // 2. On Token Decoding (JwtAccessTokenDecoded Event) – Check whether the token is in the blacklist before processing it.
+    }
+}
 ```
 
 ## Usage examples
@@ -131,9 +172,13 @@ this can be implemented using an event-based mechanism.
 ```shell
 
 ```
+### Refresh tokens
 
 ### Logout
 
+### Logout from all devices
+
+---
 
 ## Customization
 
