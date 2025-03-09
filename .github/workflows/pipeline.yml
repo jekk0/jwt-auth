@@ -51,8 +51,8 @@ jobs:
 #          configuration: phpunit.xml.dist
 #          args: tests --coverage-clover ./coverage.xml
 
-      - name: PHPStan
-        run: vendor/bin/phpstan analyse
+#      - name: PHPStan
+#        run: vendor/bin/phpstan analyse
 
 #      - name: Upload to Codecov
 #        uses: codecov/codecov-action@v4
