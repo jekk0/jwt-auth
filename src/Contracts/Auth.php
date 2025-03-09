@@ -7,7 +7,7 @@ use Jekk0\JwtAuth\Payload;
 use Jekk0\JwtAuth\Token;
 use Jekk0\JwtAuth\TokenPair;
 
-interface JwtAuth
+interface Auth
 {
     public function createTokenPair(Authenticatable $user): TokenPair;
 

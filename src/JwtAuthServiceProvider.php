@@ -6,12 +6,12 @@ use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Jekk0\JwtAuth\Console\Commands\GenerateCertificates;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Auth as AuthFacade;
 use Jekk0\JwtAuth\Contracts\TokenExtractor as TokenExtractorContract;
 use Jekk0\JwtAuth\Contracts\TokenIssuer as TokenIssuerContract;
 use Jekk0\JwtAuth\Contracts\RequestGuard as RequestGuardContract;
 use Jekk0\JwtAuth\Contracts\TokenManager as TokenManagerContract;
-use Jekk0\JwtAuth\Contracts\JwtClock as JwtClockContract;
+use Jekk0\JwtAuth\Contracts\Clock as JwtClockContract;
 use Lcobucci\Clock\SystemClock;
 
 final class JwtAuthServiceProvider extends ServiceProvider
@@ -53,12 +53,12 @@ final class JwtAuthServiceProvider extends ServiceProvider
 
     private function configureGuard(): void
     {
-        Auth::resolved(function (AuthManager $auth) {
+        AuthFacade::resolved(function (AuthManager $auth) {
             $auth->extend('jwt', function (Application $app, string $name, array $config) use ($auth) {
                 $tokenManager = $app->get(TokenManagerContract::class);
                 $tokenManager->setTokenIssuer(($app->get(TokenIssuerContract::class))($app->get('request')));
                 $guard = new RequestGuard(
-                    new JwtAuth(
+                    new Auth(
                         $tokenManager,
                         $auth->createUserProvider($config['provider']),
                         new EloquentRefreshTokenRepository()

@@ -3,12 +3,12 @@
 namespace Jekk0\JwtAuth;
 
 use Illuminate\Contracts\Auth\UserProvider;
-use Jekk0\JwtAuth\Contracts\JwtAuth as JwtAuthContract;
+use Jekk0\JwtAuth\Contracts\Auth as JwtAuthContract;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Jekk0\JwtAuth\Contracts\RefreshTokenRepository;
 use Jekk0\JwtAuth\Contracts\TokenManager;
 
-final class JwtAuth implements JwtAuthContract
+final class Auth implements JwtAuthContract
 {
     public function __construct(
         private readonly TokenManager $tokenManager,

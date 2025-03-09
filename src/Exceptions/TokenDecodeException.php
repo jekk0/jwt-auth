@@ -4,6 +4,6 @@ namespace Jekk0\JwtAuth\Exceptions;
 
 use RuntimeException;
 
-final class JwtTokenDecodeException extends RuntimeException
+final class TokenDecodeException extends RuntimeException
 {
 }

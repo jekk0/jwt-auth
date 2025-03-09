@@ -62,6 +62,7 @@ final class GenerateCertificates extends Command
         $envPublicKeyExists = preg_match($envPublicKeyRegex, $envFileContent) === 1;
         $envPrivateKeyExists = preg_match($envPrivateKeyRegex, $envFileContent) === 1;
 
+        /** @phpstan-ignore match.unhandled */
         $newEnvFileContent = match (true) {
             $envPublicKeyExists === true && $envPrivateKeyExists === true => preg_replace(
                 [$envPublicKeyRegex, $envPrivateKeyRegex],

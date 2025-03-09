@@ -8,7 +8,7 @@ use Jekk0\JwtAuth\Model\JwtRefreshToken;
 use Orchestra\Testbench\TestCase;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 
-class JwtRefreshTokenTest extends TestCase
+class RefreshTokenTest extends TestCase
 {
     use RefreshDatabase;
     use WithWorkbench;

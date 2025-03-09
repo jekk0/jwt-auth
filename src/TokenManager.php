@@ -6,8 +6,8 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Str;
-use Jekk0\JwtAuth\Contracts\JwtCustomClaims;
-use Jekk0\JwtAuth\Exceptions\JwtTokenDecodeException;
+use Jekk0\JwtAuth\Contracts\CustomClaims;
+use Jekk0\JwtAuth\Exceptions\TokenDecodeException;
 use Psr\Clock\ClockInterface;
 use Jekk0\JwtAuth\Contracts\TokenManager as TokenManagerContract;
 
@@ -55,7 +55,7 @@ final class TokenManager implements TokenManagerContract
             ]
         );
 
-        $accessTokenPayload += $user instanceof JwtCustomClaims
+        $accessTokenPayload += $user instanceof CustomClaims
             ? $user->getJwtCustomClaims() : [];
 
         $refreshTokenPayload = array_merge(
@@ -85,7 +85,7 @@ final class TokenManager implements TokenManagerContract
         try {
             $decoded = $this->decodePayload($token);
         } catch (\Exception $exception) {
-            throw new JwtTokenDecodeException($exception->getMessage(), previous: $exception);
+            throw new TokenDecodeException($exception->getMessage(), previous: $exception);
         }
 
         return new Token($token, new Payload(get_object_vars($decoded)));

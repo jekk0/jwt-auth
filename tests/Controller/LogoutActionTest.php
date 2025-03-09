@@ -46,15 +46,11 @@ class LogoutActionTest extends TestCase
     {
         $user = UserFactory::new()->create();
 
-        $accessToken = auth('user')->login($user)->access;
+        auth('user')->login($user);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
 
-        $response = $this->postJson(
-            '/api/logout',
-            ['origin' => config('app.url')],
-            ['Authorization' => 'Bearer ' . $accessToken->token]
-        );
+        $response = $this->postJson('/api/logout', ['origin' => config('app.url')], );
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame(['message' => 'Successfully logged out'], $response->json());
@@ -114,15 +110,11 @@ TOKEN;
         // Create second session
         auth('user')->login($user);
         // Create third session
-        $accessToken = auth('user')->login($user)->access;
+        auth('user')->login($user);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 3);
 
-        $response = $this->postJson(
-            '/api/logout/all',
-            ['origin' => config('app.url')],
-            ['Authorization' => 'Bearer ' . $accessToken->token]
-        );
+        $response = $this->postJson('/api/logout/all', ['origin' => config('app.url')]);
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame(['message' => 'Successfully logged out from all devices'], $response->json());

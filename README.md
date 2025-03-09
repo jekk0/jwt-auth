@@ -134,20 +134,26 @@ To add custom claims to a JWT token, you need to implement the interface `Jekk0\
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Jekk0\JwtAuth\Contracts\JwtCustomClaims;
+use Jekk0\JwtAuth\Contracts\CustomClaims;
 
-class User extends Authenticatable implements JwtCustomClaims
+class User extends Authenticatable implements CustomClaims
 {
     // ...
     
     public function getJwtCustomClaims(): array
     {
         return [
-            'custom' => 'value',
-            'otherCustom' => 'value'
+            'role' => 'user',
+            'name' => 'John'
         ];
     }
 }
+
+//...
+// Get custom claims in controller 
+
+$role = auth('jwt-user')->getAccessToken()->payload['role']
+$name = auth('jwt-user')->getAccessToken()->payload['name']
 ```
 
 ### Customize JWT extractor
@@ -255,14 +261,14 @@ namespace App\Providers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
-use Jekk0\JwtAuth\Contracts\JwtClock;
+use Jekk0\JwtAuth\Contracts\Clock;
 
 class CustomJwtTokenIssuer extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->bind(JwtClock::class, function () {
-            return new class implements JwtClock {
+        $this->app->bind(Clock::class, function () {
+            return new class implements Clock {
                 public function now(): DateTimeImmutable {
                     return new DateTimeImmutable('now', new \DateTimeZone('UTC'));                
                 }     
@@ -289,12 +295,41 @@ class CustomJwtTokenIssuer extends ServiceProvider
 7. Jekk0\JwtAuth\Events\JwtRefresh 
 8. Jekk0\JwtAuth\Events\JwtValidated
 
-```php
+strict token rules for access token
 
+## Functionally testing a JWT protected api
+
+Login user
+
+```php
+    public function test_logout(): void
+    {
+        $user = UserFactory::new()->create();
+        auth('user')->login($user);
+        
+        $response = $this->postJson('/api/logout', ['origin' => config('app.url')],);
+        self::assertSame(200, $response->getStatusCode());
+    }
 ```
 
-strict token rules for access token
-Testing with JWT
+Manually generate a JWT token for end-to-end testing:
+
+```php
+public function test_authenticate(): void
+    {
+        $user = UserFactory::new()->create();
+        $accessToken = $this->app->get(TokenManager::class)->makeTokenPair($user)->access;
+        
+        $response = $this->postJson(
+            '/api/profile',
+            ['origin' => config('app.url')],
+            ['Authorization' => 'Bearer ' . $accessToken->token]
+        );
+
+        self::assertSame(200, $response->getStatusCode());
+    }
+```
+
 
 # Development
 

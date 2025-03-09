@@ -7,14 +7,14 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Jekk0\JwtAuth\Contracts\JwtClock;
+use Jekk0\JwtAuth\Contracts\Clock;
 use Jekk0\JwtAuth\Contracts\TokenManager;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use Workbench\App\Models\User;
 use Workbench\Database\Factories\UserFactory;
 
-class CustomJwtClockActionTest extends TestCase
+class CustomClockActionTest extends TestCase
 {
     use RefreshDatabase;
     use WithWorkbench;
@@ -26,8 +26,8 @@ class CustomJwtClockActionTest extends TestCase
     protected function setUp(): void
     {
         $this->afterApplicationCreated(function () {
-            $this->app->bind(JwtClock::class, function () {
-                $clock = new class () implements JwtClock {
+            $this->app->bind(Clock::class, function () {
+                $clock = new class () implements Clock {
                     public static int $timestamp;
                     public function now(): \DateTimeImmutable
                     {

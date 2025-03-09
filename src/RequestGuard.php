@@ -6,7 +6,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Jekk0\JwtAuth\Contracts\RequestGuard as JwtGuardContract;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Jekk0\JwtAuth\Contracts\JwtAuth;
+use Jekk0\JwtAuth\Contracts\Auth;
 use Jekk0\JwtAuth\Contracts\TokenExtractor as TokenExtractorContract;
 use Jekk0\JwtAuth\Events\JwtAttempting;
 use Jekk0\JwtAuth\Events\JwtAuthenticated;
@@ -16,8 +16,8 @@ use Jekk0\JwtAuth\Events\JwtLogout;
 use Jekk0\JwtAuth\Events\JwtLogoutFromAllDevices;
 use Jekk0\JwtAuth\Events\JwtRefresh;
 use Jekk0\JwtAuth\Events\JwtValidated;
-use Jekk0\JwtAuth\Exceptions\JwtTokenDecodeException;
-use Jekk0\JwtAuth\Exceptions\JwtTokenInvalidType;
+use Jekk0\JwtAuth\Exceptions\TokenDecodeException;
+use Jekk0\JwtAuth\Exceptions\TokenInvalidType;
 use Illuminate\Contracts\Events\Dispatcher;
 
 final class RequestGuard implements JwtGuardContract
@@ -27,7 +27,7 @@ final class RequestGuard implements JwtGuardContract
     private bool $loggedOut = false;
 
     public function __construct(
-        private readonly JwtAuth $jwtAuth,
+        private readonly Auth $jwtAuth,
         private readonly TokenExtractorContract $tokenExtractor,
         private readonly Dispatcher $dispatcher,
         private Request $request
@@ -101,17 +101,16 @@ final class RequestGuard implements JwtGuardContract
         try {
             $token = $this->jwtAuth->decodeToken($refreshToken);
             if ($token->payload->getTokenType() !== TokenType::Refresh) {
-                throw new JwtTokenInvalidType('Invalid JWT token type. Expected refresh token.');
+                throw new TokenInvalidType('Invalid JWT token type. Expected refresh token.');
             }
 
             $user = $this->jwtAuth->retrieveByPayload($token->payload);
 
             $this->dispatcher->dispatch(new JwtRefresh($user, $token));
             $this->jwtAuth->revokeRefreshToken($token->payload->getJwtId());
-            $tokenPair = $this->login($user);
 
-            return $tokenPair;
-        } catch (JwtTokenDecodeException|JwtTokenInvalidType) {
+            return $this->login($user);
+        } catch (TokenDecodeException|TokenInvalidType) {
             throw new AuthenticationException();
         }
     }
@@ -136,7 +135,7 @@ final class RequestGuard implements JwtGuardContract
             $accessToken = $this->jwtAuth->decodeToken($accessToken);
             // Reject if used refresh token instead access token
             if ($accessToken->payload->getTokenType() !== TokenType::Access) {
-                throw new JwtTokenInvalidType('Invalid JWT token type. Expected access token.');
+                throw new TokenInvalidType('Invalid JWT token type. Expected access token.');
             }
 
             $user = $this->jwtAuth->retrieveByPayload($accessToken->payload);
@@ -146,7 +145,7 @@ final class RequestGuard implements JwtGuardContract
             }
 
             return $this->user;
-        } catch (JwtTokenDecodeException|JwtTokenInvalidType) {
+        } catch (TokenDecodeException|TokenInvalidType) {
             return null;
         }
     }

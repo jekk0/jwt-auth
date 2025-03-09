@@ -6,7 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Jekk0\JwtAuth\Contracts\TokenManager;
 use Jekk0\JwtAuth\EloquentRefreshTokenRepository;
-use Jekk0\JwtAuth\JwtAuth;
+use Jekk0\JwtAuth\Auth;
 use Jekk0\JwtAuth\Model\JwtRefreshToken;
 use Jekk0\JwtAuth\Payload;
 use Orchestra\Testbench\TestCase;
@@ -14,18 +14,18 @@ use Orchestra\Testbench\Concerns\WithWorkbench;
 use Workbench\App\Models\User;
 use Workbench\Database\Factories\UserFactory;
 
-class JwtAuthTest extends TestCase
+class AuthTest extends TestCase
 {
     use RefreshDatabase;
     use WithWorkbench;
 
-    private \Jekk0\JwtAuth\Contracts\JwtAuth $auth;
+    private \Jekk0\JwtAuth\Contracts\Auth $auth;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->auth = new JwtAuth(
+        $this->auth = new Auth(
             $this->app->get(TokenManager::class),
             $this->app->get('auth')->createUserProvider('users'),
             new EloquentRefreshTokenRepository()
