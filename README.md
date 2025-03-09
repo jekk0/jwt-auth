@@ -1,4 +1,4 @@
-# jwt-auth
+# JWT Auth
 
 ## Installation
 ```shell
@@ -23,7 +23,7 @@ will be added to your Laravel application.
 ### Configure package (optional)
 You should now have a `./config/jwtauth.php` file that allows you to configure the package.
 
-### Add new tables for manage tokens
+### Add new tables for manage refresh tokens
 ```shell
  php artisan migrate
 ```
@@ -50,10 +50,10 @@ Make the following changes to the file:
 // file /config/auth.php
 
     'guards' => [
--        'web' => [
--            'driver' => 'session',
--            'provider' => 'users',
--        ],
+         'web' => [
+             'driver' => 'session',
+             'provider' => 'users',
+         ],
 +        'jwt-user' => [
 +            'driver' => 'jwt.token',
 +            'provider' => 'users',
@@ -109,6 +109,20 @@ use Illuminate\Support\Facades\Schedule;
 use Jekk0\JwtAuth\Model\JwtRefreshToken
 
 Schedule::command('model:prune', ['--model' => [JwtRefreshToken::class]])->daily();
+```
+
+### Access Token Invalidation
+
+Since the lifetime of an access token is relatively short (up to one hour, with a default of 15 minutes),
+the package does not invalidate the access token upon logout. Instead, invalidation is only performed
+for the refresh token to avoid additional database query overhead.
+
+It is assumed that the frontend will simply remove the access token from storage upon logout,
+allowing it to expire naturally. However, if token invalidation needs to be enforced on every request,
+this can be implemented using an event-based mechanism.
+
+```php
+
 ```
 
 ## Usage examples
@@ -195,14 +209,12 @@ class CustomJwtTokenExtractor extends ServiceProvider
         //
     }
 }
-}
-
 ```
 
 ### Customize JWT token issuer
 
 By default, the JWT token issuer is taken from the request URL.
-To change this behavior, override the binding for `TokenIssuer` as shown in the example below:
+To change this behavior, override the binding for `Jekk0\JwtAuth\Contracts\TokenExtractor` as shown in the example below:
 
 ```shell
 php artisan make:provider CustomJwtTokenIssuer
@@ -244,9 +256,9 @@ class CustomJwtTokenIssuer extends ServiceProvider
 ### Customize leeway
 
 If there is a need to generate JWT tokens while taking leeway into account, you can achieve this
-by replacing the default `JwtClock` binding. This allows you to customize how timestamps, expiration times,
-or issued-at claims (iat, exp, nbf) are handled within the token.
-
+by replacing the default `Jekk0\JwtAuth\Contracts\Clock` binding.
+This allows you to customize how timestamps, expiration times, or issued-at claims (iat, exp, nbf) 
+are handled within the token.
 
 ```shell
 php artisan make:provider CustomJwtClock
@@ -286,7 +298,8 @@ class CustomJwtTokenIssuer extends ServiceProvider
 
 ### Available events
 
-1. Jekk0\JwtAuth\Events\JwtAttempting
+1. Jekk0\JwtAuth\Events\JwtAccessTokenDecoded
+2. Jekk0\JwtAuth\Events\JwtAttempting
 2. Jekk0\JwtAuth\Events\JwtAuthenticated
 3. Jekk0\JwtAuth\Events\JwtFailed 
 4. Jekk0\JwtAuth\Events\JwtLogin 
@@ -295,21 +308,34 @@ class CustomJwtTokenIssuer extends ServiceProvider
 7. Jekk0\JwtAuth\Events\JwtRefresh 
 8. Jekk0\JwtAuth\Events\JwtValidated
 
-strict token rules for access token
-
 ## Functionally testing a JWT protected api
 
-Login user
+Login with Laravel's default `actingAs` method
 
 ```php
-    public function test_logout(): void
-    {
-        $user = UserFactory::new()->create();
-        auth('user')->login($user);
-        
-        $response = $this->postJson('/api/logout', ['origin' => config('app.url')],);
-        self::assertSame(200, $response->getStatusCode());
-    }
+public function test_authenticate_in_tests(): void
+{
+    $user = UserFactory::new()->create();
+    $response = $this->actingAs($user, 'YOUR-GUARD-NAME')->postJson(
+        '/api/profile',
+        ['origin' => config('app.url')],
+    );
+
+    self::assertSame(200, $response->getStatusCode());
+}
+```
+
+Login with JWT guard
+
+```php
+public function test_logout(): void
+{
+    $user = UserFactory::new()->create();
+    auth('user')->login($user);
+    
+    $response = $this->postJson('/api/logout', ['origin' => config('app.url')],);
+    self::assertSame(200, $response->getStatusCode());
+}
 ```
 
 Manually generate a JWT token for end-to-end testing:

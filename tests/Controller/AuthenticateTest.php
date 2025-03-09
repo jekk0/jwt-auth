@@ -4,35 +4,16 @@ namespace Jekk0\JwtAuth\Tests\Controller;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Jekk0\JwtAuth\Contracts\TokenExtractor;
 use Jekk0\JwtAuth\Contracts\TokenManager;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use Workbench\App\Models\User;
 use Workbench\Database\Factories\UserFactory;
 
-class CustomTokenExtractorActionTest extends TestCase
+class AuthenticateTest extends TestCase
 {
     use RefreshDatabase;
     use WithWorkbench;
-
-    protected function setUp(): void
-    {
-        $this->afterApplicationCreated(function () {
-            $this->app->bind(TokenExtractor::class, function () {
-                return new class () implements TokenExtractor {
-                    public function __invoke(Request $request): ?string
-                    {
-                        return $request->header('X-API-TOKEN');
-                    }
-                };
-            });
-        });
-
-        parent::setUp();
-    }
-
 
     protected function defineEnvironment($app): void
     {
@@ -49,22 +30,32 @@ class CustomTokenExtractorActionTest extends TestCase
 
     protected function defineRoutes($router)
     {
-        $router->post('api/profile', function (Request $request) {
-            return new JsonResponse(['email' => $request->user()->email]);
+        $router->post('api/profile', function () {
+            return new JsonResponse();
         })->middleware('auth:user');
     }
 
-    public function test_authenticate_with_custom_token_extractor(): void
+    public function test_authenticate(): void
     {
         $user = UserFactory::new()->create();
         $accessToken = $this->app->get(TokenManager::class)->makeTokenPair($user)->access;
         $response = $this->postJson(
             '/api/profile',
             ['origin' => config('app.url')],
-            ['X-API-TOKEN' => $accessToken->token]
+            ['Authorization' => 'Bearer ' . $accessToken->token]
         );
 
         self::assertSame(200, $response->getStatusCode());
-        self::assertSame(['email' => $user->email], $response->json());
+    }
+
+    public function test_authenticate_in_tests(): void
+    {
+        $user = UserFactory::new()->create();
+        $response = $this->actingAs($user, 'user')->postJson(
+            '/api/profile',
+            ['origin' => config('app.url')],
+        );
+
+        self::assertSame(200, $response->getStatusCode());
     }
 }

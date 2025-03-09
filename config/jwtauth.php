@@ -57,7 +57,7 @@ return [
         | Default: 1 hour
         |
         */
-        'access' => env('JWT_AUTH_ACCESS_TOKEN_TTL', 3600),
+        'access' => env('JWT_AUTH_ACCESS_TOKEN_TTL', 900),
 
         /*
         |--------------------------------------------------------------------------

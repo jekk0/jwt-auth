@@ -2,53 +2,36 @@
 
 namespace Jekk0\JwtAuth\Tests\Controller;
 
-use Firebase\JWT\JWT;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Jekk0\JwtAuth\Contracts\Clock;
+use Jekk0\JwtAuth\Contracts\TokenIssuer;
 use Jekk0\JwtAuth\Contracts\TokenManager;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use Workbench\App\Models\User;
 use Workbench\Database\Factories\UserFactory;
 
-class CustomClockActionTest extends TestCase
+class CustomTokenIssuerTest extends TestCase
 {
     use RefreshDatabase;
     use WithWorkbench;
 
-    private int $timestamp = 1700000000;
-    private int $ttlAccess = 100;
-    private int $ttlRefresh = 1000;
-
     protected function setUp(): void
     {
         $this->afterApplicationCreated(function () {
-            $this->app->bind(Clock::class, function () {
-                $clock = new class () implements Clock {
-                    public static int $timestamp;
-                    public function now(): \DateTimeImmutable
+            $this->app->bind(TokenIssuer::class, function () {
+                return new class () implements TokenIssuer {
+                    public function __invoke(Request $request): string
                     {
-                        return new \DateTimeImmutable('@' . self::$timestamp);
+                        return 'JwtAuthIssuer';
                     }
                 };
-
-                $clock::$timestamp = $this->timestamp;
-                return $clock;
             });
         });
 
         parent::setUp();
-
-        JWT::$timestamp = $this->timestamp;
-    }
-
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-        JWT::$timestamp = null;
     }
 
     protected function defineEnvironment($app): void
@@ -61,8 +44,6 @@ class CustomClockActionTest extends TestCase
             'database.default' => 'testing',
             'jwtauth.public_key' => 'iVUKxPqZFLMD/MLONKvXMA47Yk4uUqzSgHAHSEiBRjQ=',
             'jwtauth.private_key' => 'BO2A8TxpH/g3TJqL2udi4lkDumzI6kXoz2o/NC2dRaOJVQrE+pkUswP8ws40q9cwDjtiTi5SrNKAcAdISIFGNA==',
-            'jwtauth.ttl.access' => $this->ttlAccess,
-            'jwtauth.ttl.refresh' => $this->ttlRefresh,
         ]);
     }
 
@@ -77,7 +58,7 @@ class CustomClockActionTest extends TestCase
         });
     }
 
-    public function test_authenticate_with_custom_clock(): void
+    public function test_authenticate_with_custom_issuer(): void
     {
         $password = '12345678';
         $user = UserFactory::new()->create(['password' => Hash::make($password)]);
@@ -91,13 +72,9 @@ class CustomClockActionTest extends TestCase
         $json = $response->json();
 
         $access = $this->app->get(TokenManager::class)->decode($json['access']['token']);
-        self::assertSame($this->timestamp, $access->payload->getIssuedAt());
-        self::assertSame($this->timestamp, $access->payload->getNotBefore());
-        self::assertSame($this->timestamp + $this->ttlAccess, $access->payload->getExpiriedAt());
+        self::assertSame('JwtAuthIssuer', $access->payload->getIssuer());
 
         $refresh = $this->app->get(TokenManager::class)->decode($json['refresh']['token']);
-        self::assertSame($this->timestamp, $refresh->payload->getIssuedAt());
-        self::assertSame($this->timestamp, $refresh->payload->getNotBefore());
-        self::assertSame($this->timestamp + $this->ttlRefresh, $refresh->payload->getExpiriedAt());
+        self::assertSame('JwtAuthIssuer', $refresh->payload->getIssuer());
     }
 }

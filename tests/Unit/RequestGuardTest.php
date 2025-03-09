@@ -7,13 +7,14 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Http\Request;
 use Jekk0\JwtAuth\Contracts\Auth;
 use Jekk0\JwtAuth\Contracts\TokenExtractor;
+use Jekk0\JwtAuth\Events\JwtAccessTokenDecoded;
 use Jekk0\JwtAuth\Events\JwtAttempting;
 use Jekk0\JwtAuth\Events\JwtAuthenticated;
 use Jekk0\JwtAuth\Events\JwtFailed;
 use Jekk0\JwtAuth\Events\JwtLogin;
 use Jekk0\JwtAuth\Events\JwtLogout;
 use Jekk0\JwtAuth\Events\JwtLogoutFromAllDevices;
-use Jekk0\JwtAuth\Events\JwtRefresh;
+use Jekk0\JwtAuth\Events\JwtTokenRefresh;
 use Jekk0\JwtAuth\Events\JwtValidated;
 use Jekk0\JwtAuth\Payload;
 use Jekk0\JwtAuth\RequestGuard;
@@ -240,7 +241,8 @@ class RequestGuardTest extends TestCase
         $request->headers->set('Authorization', "Bearer {$accessToken->token}");
 
         $guard = new RequestGuard($auth, new \Jekk0\JwtAuth\TokenExtractor(), $dispatcher, $request);
-        $guard->setUser($user, $accessToken);
+        $guard->setToken($accessToken);
+        $guard->setUser($user);
 
         $guard->logout();
 
@@ -279,7 +281,8 @@ class RequestGuardTest extends TestCase
         $request = Request::create('https://example.com/');
         $request->headers->set('Authorization', "Bearer {$accessToken->token}");
         $guard = new RequestGuard($auth, new \Jekk0\JwtAuth\TokenExtractor(), $dispatcher, $request);
-        $guard->setUser($user, $accessToken);
+        $guard->setToken($accessToken);
+        $guard->setUser($user);
 
         $guard->logoutFromAllDevices();
 
@@ -310,7 +313,7 @@ class RequestGuardTest extends TestCase
         );
         $tokenExtractor = $this->createMock(TokenExtractor::class);
 
-        $expectedEvent1 = new JwtRefresh($user, $refreshToken);
+        $expectedEvent1 = new JwtTokenRefresh($user, $refreshToken);
         $expectedEvent2 = new JwtLogin($user);
         $expectedEvent3 = new JwtAuthenticated($user, $tokenPair->access);
 
@@ -344,13 +347,15 @@ class RequestGuardTest extends TestCase
         $auth->expects($this->once())->method('decodeToken')->with($accessToken->token)->willReturn($accessToken);
         $auth->expects($this->once())->method('retrieveByPayload')->with($accessToken->payload)->willReturn($user);
 
-        $expectedEvent1 = new JwtAuthenticated($user, $accessToken);
+        $expectedEvent1 = new JwtAccessTokenDecoded($accessToken);
+        $expectedEvent2 = new JwtAuthenticated($user, $accessToken);
 
         $dispatcher = $this->createMock(Dispatcher::class);
-        $dispatcher->expects($matcher = $this->exactly(1))->method('dispatch')->willReturnCallback(
-            function ($event) use ($matcher, $expectedEvent1) {
+        $dispatcher->expects($matcher = $this->exactly(2))->method('dispatch')->willReturnCallback(
+            function ($event) use ($matcher, $expectedEvent1, $expectedEvent2) {
                 match ($matcher->numberOfInvocations()) {
                     1 => $this->assertEquals($expectedEvent1, $event),
+                    2 => $this->assertEquals($expectedEvent2, $event),
                 };
             }
         );
@@ -409,7 +414,8 @@ class RequestGuardTest extends TestCase
 
         $request = Request::create('https://example.com/');
         $guard = new RequestGuard($auth, new \Jekk0\JwtAuth\TokenExtractor(), $dispatcher, $request);
-        $guard->setUser($user, $accessToken);
+        $guard->setToken($accessToken);
+        $guard->setUser($user);
 
         $result = $guard->getAccessToken();
 

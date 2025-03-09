@@ -2,19 +2,38 @@
 
 namespace Jekk0\JwtAuth\Tests\Controller;
 
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Jekk0\JwtAuth\Contracts\TokenManager;
+use Jekk0\JwtAuth\Events\JwtAccessTokenDecoded;
+use Jekk0\JwtAuth\Model\JwtRefreshToken;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use Workbench\App\Models\User;
 use Workbench\Database\Factories\UserFactory;
+use Illuminate\Support\Facades\Event;
 
-class AuthenticateActionTest extends TestCase
+class InvalidateAccessTokenSolutionTwoTest extends TestCase
 {
     use RefreshDatabase;
     use WithWorkbench;
+
+    protected function setUp(): void
+    {
+        $this->afterApplicationCreated(function () {
+            Event::listen(JwtAccessTokenDecoded::class, function (JwtAccessTokenDecoded $event) {
+                $accessTokenId = $event->accessToken->payload->getJwtId();
+                $refreshToken = JwtRefreshToken::whereAccessTokenJti($accessTokenId)->first();
+
+                if ($refreshToken === null) {
+                    throw new AuthenticationException();
+                }
+            });
+        });
+
+        parent::setUp();
+    }
 
     protected function defineEnvironment($app): void
     {
@@ -31,12 +50,26 @@ class AuthenticateActionTest extends TestCase
 
     protected function defineRoutes($router)
     {
-        $router->post('api/profile', function (Request $request) {
-            return new JsonResponse(['email' => $request->user()->email]);
+        $router->post('api/profile', function () {
+            return new JsonResponse();
         })->middleware('auth:user');
     }
 
     public function test_authenticate(): void
+    {
+        $user = UserFactory::new()->create();
+        $tokenPair = auth('user')->login($user);
+
+        $response = $this->postJson(
+            '/api/profile',
+            ['origin' => config('app.url')],
+            ['Authorization' => 'Bearer ' . $tokenPair->access->token]
+        );
+
+        self::assertSame(200, $response->getStatusCode());
+    }
+
+    public function test_authenticate_refresh_token_removed(): void
     {
         $user = UserFactory::new()->create();
         $accessToken = $this->app->get(TokenManager::class)->makeTokenPair($user)->access;
@@ -46,7 +79,6 @@ class AuthenticateActionTest extends TestCase
             ['Authorization' => 'Bearer ' . $accessToken->token]
         );
 
-        self::assertSame(200, $response->getStatusCode());
-        self::assertSame(['email' => $user->email], $response->json());
+        self::assertSame(401, $response->getStatusCode());
     }
 }

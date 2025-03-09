@@ -6,7 +6,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Queue\SerializesModels;
 use Jekk0\JwtAuth\Token;
 
-class JwtRefresh
+class JwtTokenRefresh
 {
     use SerializesModels;
 
