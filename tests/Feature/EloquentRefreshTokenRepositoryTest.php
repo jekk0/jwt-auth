@@ -3,6 +3,7 @@
 namespace Jekk0\JwtAuth\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Jekk0\JwtAuth\Database\Factories\JwtRefreshTokenFactory;
 use Jekk0\JwtAuth\EloquentRefreshTokenRepository;
 use Jekk0\JwtAuth\Model\JwtRefreshToken;
 use Jekk0\JwtAuth\RefreshTokenStatus;
@@ -42,7 +43,9 @@ class EloquentRefreshTokenRepositoryTest extends TestCase
         $accessTokenJti = '01JNV3HSGKSWAQFYVN56G84AC3';
         $subject = 'subject';
         $expiredAt = new \DateTimeImmutable();
-        (new EloquentRefreshTokenRepository())->create($jti, $accessTokenJti, $subject, $expiredAt);
+        JwtRefreshTokenFactory::new()->create(
+            ['jti' => $jti, 'access_token_jti' => $accessTokenJti, 'sub' => $subject, 'expired_at' => $expiredAt]
+        );
 
         $refreshToken = (new EloquentRefreshTokenRepository())->get($jti);
 
@@ -66,7 +69,9 @@ class EloquentRefreshTokenRepositoryTest extends TestCase
         $accessTokenJti = '01JNV3HSGKSWAQFYVN56G84AC3';
         $subject = 'subject';
         $expiredAt = new \DateTimeImmutable();
-        (new EloquentRefreshTokenRepository())->create($jti, $accessTokenJti, $subject, $expiredAt);
+        JwtRefreshTokenFactory::new()->create(
+            ['jti' => $jti, 'access_token_jti' => $accessTokenJti, 'sub' => $subject, 'expired_at' => $expiredAt]
+        );
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
         self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find($jti)->status);
@@ -81,23 +86,29 @@ class EloquentRefreshTokenRepositoryTest extends TestCase
     {
         $subject = 'subject';
         $expiredAt = new \DateTimeImmutable();
-        (new EloquentRefreshTokenRepository())->create(
-            $jti1 = '01JNV3HSGKE0ZJ44GBB299WD6S',
-            '01JNV3HSGMD3MZRSDY3WJV2DD2',
-            $subject,
-            $expiredAt
+        JwtRefreshTokenFactory::new()->create(
+            [
+                'jti' => $jti1 = '01JNV3HSGKE0ZJ44GBB299WD6S',
+                'access_token_jti' => '01JNV3HSGMD3MZRSDY3WJV2DD2',
+                'sub' => $subject,
+                'expired_at' => $expiredAt
+            ]
         );
-        (new EloquentRefreshTokenRepository())->create(
-            $jti2 = '01JNV3HSGK48FMGCHNW2BSWSY3',
-            '01JNV3HSGMWBQWZNQW93RJ12Y9',
-            $subject,
-            $expiredAt
+        JwtRefreshTokenFactory::new()->create(
+            [
+                'jti' => $jti2 = '01JNV3HSGK48FMGCHNW2BSWSY3',
+                'access_token_jti' => '01JNV3HSGMWBQWZNQW93RJ12Y9',
+                'sub' => $subject,
+                'expired_at' => $expiredAt
+            ]
         );
-        (new EloquentRefreshTokenRepository())->create(
-            $jti3 = '01JNV3HSGK1MZ7EYTQ7N8Q9V0M',
-            '01JNV3HSGMZ26F430Y6VA1FECP',
-            'other-subject',
-            $expiredAt
+        JwtRefreshTokenFactory::new()->create(
+            [
+                'jti' => $jti3 = '01JNV3HSGK1MZ7EYTQ7N8Q9V0M',
+                'access_token_jti' => '01JNV3HSGMZ26F430Y6VA1FECP',
+                'sub' => 'other-subject',
+                'expired_at' => $expiredAt
+            ]
         );
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 3);
@@ -111,5 +122,43 @@ class EloquentRefreshTokenRepositoryTest extends TestCase
         self::assertSame(RefreshTokenStatus::Revoked, JwtRefreshToken::find($jti1)->status);
         self::assertSame(RefreshTokenStatus::Revoked, JwtRefreshToken::find($jti2)->status);
         self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find($jti3)->status);
+    }
+
+    public function test_mark_as_used(): void
+    {
+        $jti = '01JNV3HSGK8TSR3TFAYN2VBQ6F';
+        $accessTokenJti = '01JNV3HSGKSWAQFYVN56G84AC3';
+        $subject = 'subject';
+        $expiredAt = new \DateTimeImmutable();
+        JwtRefreshTokenFactory::new()->create(
+            ['jti' => $jti, 'access_token_jti' => $accessTokenJti, 'sub' => $subject, 'expired_at' => $expiredAt]
+        );
+
+        $this->assertDatabaseCount(JwtRefreshToken::class, 1);
+        self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find($jti)->status);
+
+        (new EloquentRefreshTokenRepository())->markAsUsed($jti);
+
+        $this->assertDatabaseCount(JwtRefreshToken::class, 1);
+        self::assertSame(RefreshTokenStatus::Used, JwtRefreshToken::find($jti)->status);
+    }
+
+    public function test_mark_as_compromised(): void
+    {
+        $jti = '01JNV3HSGK8TSR3TFAYN2VBQ6F';
+        $accessTokenJti = '01JNV3HSGKSWAQFYVN56G84AC3';
+        $subject = 'subject';
+        $expiredAt = new \DateTimeImmutable();
+        JwtRefreshTokenFactory::new()->create(
+            ['jti' => $jti, 'access_token_jti' => $accessTokenJti, 'sub' => $subject, 'expired_at' => $expiredAt]
+        );
+
+        $this->assertDatabaseCount(JwtRefreshToken::class, 1);
+        self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find($jti)->status);
+
+        (new EloquentRefreshTokenRepository())->markAsCompromised($jti);
+
+        $this->assertDatabaseCount(JwtRefreshToken::class, 1);
+        self::assertSame(RefreshTokenStatus::Compromised, JwtRefreshToken::find($jti)->status);
     }
 }

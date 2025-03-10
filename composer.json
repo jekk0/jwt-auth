@@ -37,7 +37,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Jekk0\\JwtAuth\\": "src/"
+            "Jekk0\\JwtAuth\\": "src/",
+            "Jekk0\\JwtAuth\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {

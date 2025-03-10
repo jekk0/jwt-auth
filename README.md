@@ -326,10 +326,49 @@ it is a strong indication of a token theft or replay attack. Here’s what to do
    - If a stolen refresh token was used, inform the user about a possible security breach.
    - Recommend changing their password if suspicious activity is detected.
 
+Make event listener: 
 ```php
 php artisan make:listener RefreshTokenCompromised
 ```
 
+```php
+<?php
+
+namespace App\Listeners;
+
+use Illuminate\Support\Facades\Log;
+use Jekk0\JwtAuth\Events\JwtRefreshTokenCompromised;
+use Jekk0\JwtAuth\Model\JwtRefreshToken;
+use Jekk0\JwtAuth\RefreshTokenStatus;
+
+class RefreshTokenCompromised
+{
+    public function handle(JwtRefreshTokenCompromised $event): void
+    {
+        Log::info("Guard $event->guard: Refresh token compromised.");
+        
+        // Get affected refresh tokens
+        $affectedRefreshTokens = JwtRefreshToken::where('sub', '=', (string)$event->user->id)
+            ->where('status', '=', RefreshTokenStatus::Active)
+            ->get();
+
+        foreach ($affectedRefreshTokens as $refreshToken) {
+            $accessTokenId = $refreshToken->access_token_jti;
+
+            // Invalidate access tokens
+            // ...
+        }
+
+        // Invalidate refresh tokens related to user
+        JwtRefreshToken::whereIn('jti', $affectedRefreshTokens->pluck('jti'))
+            ->update(['status' => RefreshTokenStatus::Compromised]);
+
+        // Send notification to user
+        //...
+    }
+}
+
+```
 
 ## Customization
 

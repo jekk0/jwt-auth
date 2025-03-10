@@ -41,7 +41,6 @@ final class EloquentRefreshTokenRepository implements RefreshTokenRepositoryCont
         JwtRefreshToken::where('sub', $subject)->update(['status' => RefreshTokenStatus::Revoked]);
     }
 
-    // todo test
     public function markAsUsed(string $jti): void
     {
         $refreshToken = $this->get($jti);
@@ -49,7 +48,6 @@ final class EloquentRefreshTokenRepository implements RefreshTokenRepositoryCont
         $refreshToken->save();
     }
 
-    // todo test
     public function markAsCompromised(string $jti): void
     {
         $refreshToken = $this->get($jti);
