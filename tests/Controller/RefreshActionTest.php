@@ -99,7 +99,9 @@ class RefreshActionTest extends TestCase
         $tokenPair = auth('jwt-user')->login($user);
 
         $response = $this->postJson(
-            '/api/refresh', ['origin' => config('app.url')], ['Authorization' => 'Bearer ' . $tokenPair->access->token]
+            '/api/refresh',
+            ['origin' => config('app.url')],
+            ['Authorization' => 'Bearer ' . $tokenPair->access->token]
         );
 
         self::assertSame(401, $response->getStatusCode());
@@ -112,7 +114,9 @@ class RefreshActionTest extends TestCase
         $refreshToken = $this->app->get(TokenManager::class)->makeTokenPair($user)->refresh;
 
         $response = $this->postJson(
-            '/api/refresh', ['origin' => config('app.url')], ['Authorization' => 'Bearer ' . $refreshToken->token]
+            '/api/refresh',
+            ['origin' => config('app.url')],
+            ['Authorization' => 'Bearer ' . $refreshToken->token]
         );
 
         self::assertSame(401, $response->getStatusCode());
@@ -121,7 +125,9 @@ class RefreshActionTest extends TestCase
     public function test_refresh_with_empty_token(): void
     {
         $response = $this->postJson(
-            '/api/refresh', ['origin' => config('app.url')], ['Authorization' => 'Bearer ']
+            '/api/refresh',
+            ['origin' => config('app.url')],
+            ['Authorization' => 'Bearer ']
         );
 
         self::assertSame(401, $response->getStatusCode());
