@@ -103,6 +103,20 @@ class RefreshActionTest extends TestCase
         self::assertSame(401, $response->getStatusCode());
     }
 
+    public function test_refresh_token_compromised(): void
+    {
+        $user = UserFactory::new()->create();
+        $refreshToken = $this->app->get(TokenManager::class)->makeTokenPair($user)->refresh;
+
+        $response = $this->postJson(
+            '/api/refresh',
+            ['origin' => config('app.url')],
+            ['Authorization' => 'Bearer ' . $refreshToken->token]
+        );
+
+        self::assertSame(401, $response->getStatusCode());
+    }
+
     public function test_refresh_with_empty_token(): void
     {
         $response = $this->postJson(

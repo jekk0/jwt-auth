@@ -14,8 +14,10 @@ use Jekk0\JwtAuth\Events\JwtFailed;
 use Jekk0\JwtAuth\Events\JwtLogin;
 use Jekk0\JwtAuth\Events\JwtLogout;
 use Jekk0\JwtAuth\Events\JwtLogoutFromAllDevices;
+use Jekk0\JwtAuth\Events\JwtRefreshTokenCompromised;
 use Jekk0\JwtAuth\Events\JwtTokenRefresh;
 use Jekk0\JwtAuth\Events\JwtValidated;
+use Jekk0\JwtAuth\Model\JwtRefreshToken;
 use Jekk0\JwtAuth\Payload;
 use Jekk0\JwtAuth\RequestGuard;
 use Jekk0\JwtAuth\Token;
@@ -306,6 +308,8 @@ class RequestGuardTest extends TestCase
         $auth = $this->createMock(Auth::class);
         $auth->expects($this->once())->method('decodeToken')->with($refreshToken->token)->willReturn($refreshToken);
         $auth->expects($this->once())->method('retrieveByPayload')->with($refreshToken->payload)->willReturn($user);
+        $auth->expects($this->once())->method('getRefreshToken')->with($refreshToken->payload->getJwtId())
+            ->willReturn(new JwtRefreshToken());
         $auth->expects($this->once())->method('revokeRefreshToken')->with($refreshToken->payload->getJwtId());
         $auth->expects($this->once())->method('createTokenPair')->with($user)->willReturn(
             $tokenPair = new TokenPair(
@@ -333,9 +337,45 @@ class RequestGuardTest extends TestCase
         $request = Request::create('');
         $guard = new RequestGuard($guardName, $auth, $tokenExtractor, $dispatcher, $request);
 
-        $result = $guard->refreshTokens($tokenPair->refresh->token);
+        $result = $guard->refreshTokens($refreshToken->token);
 
         self::assertSame($tokenPair, $result);
+    }
+
+    public function test_refresh_tokens_compromised(): void
+    {
+        $user = new User(['id' => '33']);
+        $refreshToken = new Token(
+            'jwt',
+            new Payload(['jti' => 'AAAA', 'sub' => $user->id, 'exp' => time(), 'rfi' => 'NNN', 'ttp' => TokenType::Refresh->value])
+        );
+        $guardName = 'jwt-user';
+        $auth = $this->createMock(Auth::class);
+        $auth->expects($this->once())->method('decodeToken')->with($refreshToken->token)->willReturn($refreshToken);
+        $auth->expects($this->once())->method('retrieveByPayload')->with($refreshToken->payload)->willReturn($user);
+        $auth->expects($this->once())->method('getRefreshToken')->with($refreshToken->payload->getJwtId())
+            ->willReturn(null);
+        $auth->expects($this->never())->method('revokeRefreshToken');
+        $auth->expects($this->never())->method('createTokenPair');
+
+        $tokenExtractor = $this->createMock(TokenExtractor::class);
+
+        $expectedEvent1 = new JwtRefreshTokenCompromised($guardName, $user, $refreshToken);
+
+        $dispatcher = $this->createMock(Dispatcher::class);
+        $dispatcher->expects($matcher = $this->exactly(1))->method('dispatch')->willReturnCallback(
+            function ($event) use ($matcher, $expectedEvent1) {
+                match ($matcher->numberOfInvocations()) {
+                    1 => $this->assertEquals($expectedEvent1, $event)
+                };
+            }
+        );
+
+        $request = Request::create('');
+        $guard = new RequestGuard($guardName, $auth, $tokenExtractor, $dispatcher, $request);
+
+        $this->expectException(AuthenticationException::class);
+        $guard->refreshTokens($refreshToken->token);
     }
 
     public function test_user_with_access_token(): void

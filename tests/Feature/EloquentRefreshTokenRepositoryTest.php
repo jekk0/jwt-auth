@@ -35,6 +35,30 @@ class EloquentRefreshTokenRepositoryTest extends TestCase
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
     }
 
+    public function test_get(): void
+    {
+        $jti = '01JNV3HSGK8TSR3TFAYN2VBQ6F';
+        $accessTokenJti = '01JNV3HSGKSWAQFYVN56G84AC3';
+        $subject = 'subject';
+        $expiredAt = new \DateTimeImmutable();
+        (new EloquentRefreshTokenRepository())->create($jti, $accessTokenJti, $subject, $expiredAt);
+
+        $refreshToken = (new EloquentRefreshTokenRepository())->get($jti);
+
+        self::assertSame($jti, $refreshToken->jti);
+        self::assertSame($accessTokenJti, $refreshToken->access_token_jti);
+        self::assertSame($subject, $refreshToken->sub);
+    }
+
+    public function test_get_not_found(): void
+    {
+        $jti = '01JNV3HSGK8TSR3TFAYN2VBQ6F';
+
+        $refreshToken = (new EloquentRefreshTokenRepository())->get($jti);
+
+        self::assertNull($refreshToken);
+    }
+
     public function test_delete(): void
     {
         $jti = '01JNV3HSGK8TSR3TFAYN2VBQ6F';

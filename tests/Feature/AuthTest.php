@@ -120,6 +120,21 @@ class AuthTest extends TestCase
         self::assertNull($result);
     }
 
+    public function test_get_refresh_token(): void
+    {
+        $jti = '01JNV3HSGK8TSR3TFAYN2VBQ6F';
+        $accessTokenJti = '01JNV3HSGKSWAQFYVN56G84AC3';
+        $subject = 'subject';
+        $expiredAt = new \DateTimeImmutable();
+        (new EloquentRefreshTokenRepository())->create($jti, $accessTokenJti, $subject, $expiredAt);
+
+        $result = $this->auth->getRefreshToken($jti);
+
+        $expected = JwtRefreshToken::find($jti);
+
+        self::assertTrue($expected->is($result));
+    }
+
     public function test_revoke_refresh_token(): void
     {
         $jti = '01JNV3HSGK8TSR3TFAYN2VBQ6F';

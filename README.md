@@ -268,7 +268,7 @@ allowing it to expire naturally. However, if token invalidation needs to be enfo
 this can be implemented using an event-based mechanism.
 
 ```php
-php artisan make:listener JwtAccessTokenInvalidation
+php artisan make:listener AccessTokenInvalidation
 ```
 
 ```php
@@ -280,7 +280,7 @@ use Illuminate\Auth\AuthenticationException;
 use Jekk0\JwtAuth\Events\JwtAccessTokenDecoded;
 use Jekk0\JwtAuth\Model\JwtRefreshToken;
 
-class JwtAccessTokenInvalidation
+class AccessTokenInvalidation
 {
 
     public function handle(JwtAccessTokenDecoded $event): void
@@ -320,6 +320,10 @@ it is a strong indication of a token theft or replay attack. Here’s what to do
 2. Notify the User
    - If a stolen refresh token was used, inform the user about a possible security breach.
    - Recommend changing their password if suspicious activity is detected.
+
+```php
+php artisan make:listener RefreshTokenCompromised
+```
 
 
 ## Customization
