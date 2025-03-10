@@ -230,7 +230,7 @@ class AuthTest extends TestCase
         $userProvider = $this->createMock(EloquentUserProvider::class);
         $tokenManager = $this->createMock(TokenManagerContract::class);
         $refreshTokenRepository = $this->createMock(RefreshTokenRepository::class);
-        $refreshTokenRepository->expects($this->once())->method('delete')->with($jti);
+        $refreshTokenRepository->expects($this->once())->method('markAsRevoked')->with($jti);
 
         $auth = new Auth($tokenManager, $userProvider, $refreshTokenRepository);
 
@@ -246,7 +246,7 @@ class AuthTest extends TestCase
         $userProvider = $this->createMock(EloquentUserProvider::class);
         $tokenManager = $this->createMock(TokenManagerContract::class);
         $refreshTokenRepository = $this->createMock(RefreshTokenRepository::class);
-        $refreshTokenRepository->expects($this->once())->method('deleteAllBySubject')->with($subject);
+        $refreshTokenRepository->expects($this->once())->method('markAsRevokedAllBySubject')->with($subject);
 
         $auth = new Auth($tokenManager, $userProvider, $refreshTokenRepository);
 

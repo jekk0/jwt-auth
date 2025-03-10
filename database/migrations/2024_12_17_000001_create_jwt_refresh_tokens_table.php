@@ -13,6 +13,7 @@ return new class extends Migration
             $table->char('access_token_jti', 26)->index();
             $table->string('sub', 36);
             $table->timestamp('expired_at');
+            $table->string('status', 36);
             $table->timestamps();
         });
     }

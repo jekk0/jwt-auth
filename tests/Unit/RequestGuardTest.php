@@ -20,6 +20,7 @@ use Jekk0\JwtAuth\Events\JwtTokensRefreshed;
 use Jekk0\JwtAuth\Events\JwtValidated;
 use Jekk0\JwtAuth\Model\JwtRefreshToken;
 use Jekk0\JwtAuth\Payload;
+use Jekk0\JwtAuth\RefreshTokenStatus;
 use Jekk0\JwtAuth\RequestGuard;
 use Jekk0\JwtAuth\Token;
 use Jekk0\JwtAuth\TokenPair;
@@ -311,7 +312,7 @@ class RequestGuardTest extends TestCase
         $auth->expects($this->once())->method('retrieveByPayload')->with($refreshToken->payload)->willReturn($user);
         $auth->expects($this->once())->method('getRefreshToken')->with($refreshToken->payload->getJwtId())
             ->willReturn(new JwtRefreshToken());
-        $auth->expects($this->once())->method('revokeRefreshToken')->with($refreshToken->payload->getJwtId());
+        $auth->expects($this->once())->method('markAsUsed')->with($refreshToken->payload->getJwtId());
         $auth->expects($this->once())->method('createTokenPair')->with($user)->willReturn(
             $tokenPair = new TokenPair(
                 new Token('jwt', new Payload(['jti' => 'new_1', 'sub' => $user->id, 'exp' => time()])),
@@ -391,8 +392,9 @@ class RequestGuardTest extends TestCase
         $auth->expects($this->once())->method('decodeToken')->with($refreshToken->token)->willReturn($refreshToken);
         $auth->expects($this->once())->method('retrieveByPayload')->with($refreshToken->payload)->willReturn($user);
         $auth->expects($this->once())->method('getRefreshToken')->with($refreshToken->payload->getJwtId())
-            ->willReturn(null);
-        $auth->expects($this->never())->method('revokeRefreshToken');
+            ->willReturn(new JwtRefreshToken(['status' => RefreshTokenStatus::Used]));
+        $auth->expects($this->once())->method('markAsCompromised')->with($refreshToken->payload->getJwtId());
+        $auth->expects($this->never())->method('markAsUsed');
         $auth->expects($this->never())->method('createTokenPair');
 
         $tokenExtractor = $this->createMock(TokenExtractor::class);

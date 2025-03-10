@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\JsonResponse;
 use Jekk0\JwtAuth\Contracts\TokenManager;
 use Jekk0\JwtAuth\Model\JwtRefreshToken;
+use Jekk0\JwtAuth\RefreshTokenStatus;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use Workbench\App\Models\User;
@@ -46,16 +47,18 @@ class LogoutActionTest extends TestCase
     {
         $user = UserFactory::new()->create();
 
-        auth('jwt-user')->login($user);
+        $refreshToken = auth('jwt-user')->login($user)->refresh;
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
+        self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find($refreshToken->payload->getJwtId())->status);
 
         $response = $this->postJson('/api/logout', ['origin' => config('app.url')], );
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame(['message' => 'Successfully logged out'], $response->json());
 
-        $this->assertDatabaseCount(JwtRefreshToken::class, 0);
+        $this->assertDatabaseCount(JwtRefreshToken::class, 1);
+        self::assertSame(RefreshTokenStatus::Revoked, JwtRefreshToken::find($refreshToken->payload->getJwtId())->status);
     }
 
     public function test_logout_by_without_token(): void
@@ -113,12 +116,20 @@ TOKEN;
         auth('jwt-user')->login($user);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 3);
+        $tokens = JwtRefreshToken::all();
+        self::assertSame(RefreshTokenStatus::Active, $tokens->get(0)->status);
+        self::assertSame(RefreshTokenStatus::Active, $tokens->get(1)->status);
+        self::assertSame(RefreshTokenStatus::Active, $tokens->get(2)->status);
 
         $response = $this->postJson('/api/logout/all', ['origin' => config('app.url')]);
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame(['message' => 'Successfully logged out from all devices'], $response->json());
 
-        $this->assertDatabaseCount(JwtRefreshToken::class, 0);
+        $this->assertDatabaseCount(JwtRefreshToken::class, 3);
+        $tokens = JwtRefreshToken::all();
+        self::assertSame(RefreshTokenStatus::Revoked, $tokens->get(0)->status);
+        self::assertSame(RefreshTokenStatus::Revoked, $tokens->get(1)->status);
+        self::assertSame(RefreshTokenStatus::Revoked, $tokens->get(2)->status);
     }
 }

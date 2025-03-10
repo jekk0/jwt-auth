@@ -14,7 +14,13 @@ final class EloquentRefreshTokenRepository implements RefreshTokenRepositoryCont
         \DateTimeImmutable $expired_at
     ): void {
         JwtRefreshToken::create(
-            ['jti' => $jti, 'access_token_jti' => $accessTokenJti, 'sub' => $subject, 'expired_at' => $expired_at]
+            [
+                'jti' => $jti,
+                'access_token_jti' => $accessTokenJti,
+                'sub' => $subject,
+                'expired_at' => $expired_at,
+                'status' => RefreshTokenStatus::Active
+            ]
         );
     }
 
@@ -23,13 +29,31 @@ final class EloquentRefreshTokenRepository implements RefreshTokenRepositoryCont
         return JwtRefreshToken::find($jti);
     }
 
-    public function delete(string $jti): void
+    public function markAsRevoked(string $jti): void
     {
-        JwtRefreshToken::destroy($jti);
+        $refreshToken = $this->get($jti);
+        $refreshToken->status = RefreshTokenStatus::Revoked;
+        $refreshToken->save();
     }
 
-    public function deleteAllBySubject(string $subject): void
+    public function markAsRevokedAllBySubject(string $subject): void
     {
-        JwtRefreshToken::where('sub', $subject)->delete();
+        JwtRefreshToken::where('sub', $subject)->update(['status' => RefreshTokenStatus::Revoked]);
+    }
+
+    // todo test
+    public function markAsUsed(string $jti): void
+    {
+        $refreshToken = $this->get($jti);
+        $refreshToken->status = RefreshTokenStatus::Used;
+        $refreshToken->save();
+    }
+
+    // todo test
+    public function markAsCompromised(string $jti): void
+    {
+        $refreshToken = $this->get($jti);
+        $refreshToken->status = RefreshTokenStatus::Compromised;
+        $refreshToken->save();
     }
 }

@@ -5,6 +5,7 @@ namespace Jekk0\JwtAuth\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\MassPrunable;
+use Jekk0\JwtAuth\RefreshTokenStatus;
 
 final class JwtRefreshToken extends Model
 {
@@ -16,6 +17,7 @@ final class JwtRefreshToken extends Model
 
     protected $casts = [
         'expired_at' => 'datetime',
+        'status' => RefreshTokenStatus::class
     ];
 
     protected $fillable = [
@@ -23,6 +25,7 @@ final class JwtRefreshToken extends Model
         'access_token_jti',
         'sub',
         'expired_at',
+        'status'
     ];
 
     protected $hidden = [

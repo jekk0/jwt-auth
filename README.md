@@ -1,5 +1,10 @@
 # JWT Auth
 
+![Build Status](https://github.com/jekk0/laravel-iso3166-validation-rules/actions/workflows/pipeline.yml/badge.svg?branch=master)
+[![Coverage Status](https://codecov.io/gh/jekk0/laravel-iso3166-validation-rules/branch/master/graphs/badge.svg)](https://codecov.io/gh/jekk0/laravel-iso3166-validation-rules)
+[![Latest Stable Version](https://poser.pugx.org/jekk0/laravel-iso3166-validation-rules/v/stable)](https://packagist.org/packages/jekk0/laravel-iso3166-validation-rules)
+[![Total Downloads](https://poser.pugx.org/jekk0/laravel-iso3166-validation-rules/downloads)](https://packagist.org/packages/jekk0/laravel-iso3166-validation-rules)
+
 ## Installation
 ```shell
 composer require jekk0/jwt-auth

@@ -32,4 +32,8 @@ interface Auth
     public function revokeRefreshToken(string $jti): void;
 
     public function revokeAllRefreshTokens(Authenticatable $user): void;
+
+    public function markAsUsed(string $jti): void;
+
+    public function markAsCompromised(string $jti): void;
 }

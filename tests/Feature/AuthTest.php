@@ -9,6 +9,7 @@ use Jekk0\JwtAuth\EloquentRefreshTokenRepository;
 use Jekk0\JwtAuth\Auth;
 use Jekk0\JwtAuth\Model\JwtRefreshToken;
 use Jekk0\JwtAuth\Payload;
+use Jekk0\JwtAuth\RefreshTokenStatus;
 use Orchestra\Testbench\TestCase;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Workbench\App\Models\User;
@@ -144,10 +145,12 @@ class AuthTest extends TestCase
         (new EloquentRefreshTokenRepository())->create($jti, $accessTokenJti, $subject, $expiredAt);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
+        self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find($jti)->status);
 
         $this->auth->revokeRefreshToken($jti);
 
-        $this->assertDatabaseCount(JwtRefreshToken::class, 0);
+        $this->assertDatabaseCount(JwtRefreshToken::class, 1);
+        self::assertSame(RefreshTokenStatus::Revoked, JwtRefreshToken::find($jti)->status);
     }
 
     public function test_revoke_all_refresh_tokens(): void
@@ -159,9 +162,15 @@ class AuthTest extends TestCase
         (new EloquentRefreshTokenRepository())->create('3', '6', 'other-subject', $expiredAt);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 3);
+        self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find('1')->status);
+        self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find('2')->status);
+        self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find('3')->status);
 
         $this->auth->revokeAllRefreshTokens($user);
 
-        $this->assertDatabaseCount(JwtRefreshToken::class, 1);
+        $this->assertDatabaseCount(JwtRefreshToken::class, 3);
+        self::assertSame(RefreshTokenStatus::Revoked, JwtRefreshToken::find('1')->status);
+        self::assertSame(RefreshTokenStatus::Revoked, JwtRefreshToken::find('2')->status);
+        self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find('3')->status);
     }
 }

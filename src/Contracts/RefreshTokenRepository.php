@@ -15,7 +15,11 @@ interface RefreshTokenRepository
 
     public function get(string $jti): ?JwtRefreshToken;
 
-    public function delete(string $jti): void;
+    public function markAsRevoked(string $jti): void;
 
-    public function deleteAllBySubject(string $subject): void;
+    public function markAsRevokedAllBySubject(string $subject): void;
+
+    public function markAsUsed(string $jti): void;
+
+    public function markAsCompromised(string $jti): void;
 }

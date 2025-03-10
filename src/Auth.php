@@ -53,6 +53,7 @@ final class Auth implements JwtAuthContract
         return null;
     }
 
+    // todo chenge arg
     public function getRefreshToken(string $jti): ?JwtRefreshToken
     {
         return $this->refreshTokenRepository->get($jti);
@@ -63,13 +64,28 @@ final class Auth implements JwtAuthContract
         return $this->tokenManager->decode($token);
     }
 
+    // todo chenge arg
     public function revokeRefreshToken(string $jti): void
     {
-        $this->refreshTokenRepository->delete($jti);
+        $this->refreshTokenRepository->markAsRevoked($jti);
     }
 
     public function revokeAllRefreshTokens(Authenticatable $user): void
     {
-        $this->refreshTokenRepository->deleteAllBySubject($user->getAuthIdentifier());
+        $this->refreshTokenRepository->markAsRevokedAllBySubject($user->getAuthIdentifier());
+    }
+
+    // todo test
+    // todo chenge arg
+    public function markAsUsed(string $jti): void
+    {
+        $this->refreshTokenRepository->markAsUsed($jti);
+    }
+
+    // todo chenge arg
+    // todo test
+    public function markAsCompromised(string $jti): void
+    {
+        $this->refreshTokenRepository->markAsCompromised($jti);
     }
 }
