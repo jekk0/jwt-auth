@@ -58,7 +58,7 @@ Make the following changes to the file:
              'provider' => 'users',
          ],
 +        'jwt-user' => [
-+            'driver' => 'jwt.token',
++            'driver' => 'jwt',
 +            'provider' => 'users',
 +        ],
     ]
@@ -73,19 +73,51 @@ php artisan make:controller UserAuthController
 
 ```php
 // app/Http/Controllers/UserAuthController.php
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class UserAuthController
 {
     public function login(Request $request): JsonResponse
     {
+        $credentials = $request->only('email', 'password');
+
+        $tokens = auth('jwt-user')->attempt($credentials);
+
+        return new JsonResponse($tokens->toArray());
+    }
+
+    public function refresh(Request $request): JsonResponse
+    {
+        $tokens = auth('jwt-user')->refreshTokens($request->get('token'));
+
+        return new JsonResponse($tokens->toArray());
+    }
+
+    public function logout(): JsonResponse
+    {
+        auth('jwt-user')->logout();
+
         return new JsonResponse();
     }
 
-    public function logout(Request $request): JsonResponse
+    public function logoutFromAllDevices(): JsonResponse
     {
-        return new JsonResponse([]);
+        auth('jwt-user')->logoutFromAllDevices();
+
+        return new JsonResponse();
+    }
+
+    public function profile(Request $request): JsonResponse
+    {
+        return new JsonResponse(['name' => $request->user()->name, 'email' => $request->user()->email]);
     }
 }
+
 ```
 ### Add auth routes
 ```php
@@ -96,9 +128,12 @@ class UserAuthController
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserAuthController;
 
-Route::group(['prefix' => '/user/auth'], function () {
+Route::group(['prefix' => '/auth/user'], function () {
     Route::post('/login', [UserAuthController::class, 'login']);
+    Route::post('/refresh', [UserAuthController::class, 'refresh']);
     Route::post('/logout', [UserAuthController::class, 'logout'])->middleware('auth:jwt-user');
+    Route::post('/logout/all', [UserAuthController::class, 'logoutFromAllDevices'])->middleware('auth:jwt-user');
+    Route::get('/profile', [UserAuthController::class, 'profile'])->middleware('auth:jwt-user');
 });
 
 ```
@@ -166,19 +201,112 @@ class JwtAccessTokenInvalidation
 }
 ```
 
-## Usage examples
+## Refresh Token Flow
 
-### Login
+The Refresh Token Flow is a mechanism that allows users to obtain a new access token without re-authenticating.
+It is used to maintain sessions securely while keeping access tokens short-lived.
+
+### User Authentication
+
+The user logs in with their credentials (e.g., email/password)
+The server verifies the credentials and issues:
+- A short-lived access token (e.g., valid for 15 minutes).
+- A long-lived refresh token (e.g., valid for several days or weeks).
+
+Authentication request:
 ```shell
-
+curl --location 'localhost:8000/api/auth/user/login' \
+--header 'Accept: application/json' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "email": "user@example.com",
+    "password": "user"
+}'
 ```
-### Refresh tokens
 
-### Logout
+Authentication response:
+```json
+{
+    "access": {
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.eyJpc3MiOiJDdXN0b21Jc3N1ZXIiLCJzdWIiOjEsImF1ZCI6ImYyYjc1ZjdiMDU5ZDNhNTQiLCJuYmYiOjE3NDE2MDUzNTEsImlhdCI6MTc0MTYwNTM1MSwiZXhwIjoxNzQxNjA2MjUxLCJ0dHAiOiJhY2Nlc3MiLCJqdGkiOiIwMUpOWlc5QzdCVjZTNDc1NDAwQzg0QlpISyIsInJmaSI6IjAxSk5aVzlDN0JWNlM0NzU0MDBDODRCWkhNIiwicm9sZSI6InVzZXIifQ.7y38gsRg5qwRsQBzsPSF90DLWzbTgWc9vbE5f1G1EXUBKL_4iROMmhHgbjJl05MCXCc0JKTWHvDE2iAkJV5rBQ",
+        "expiredAt": 1741606251
+    },
+    "refresh": {
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.eyJpc3MiOiJDdXN0b21Jc3N1ZXIiLCJzdWIiOjEsImF1ZCI6ImYyYjc1ZjdiMDU5ZDNhNTQiLCJuYmYiOjE3NDE2MDUzNTEsImlhdCI6MTc0MTYwNTM1MSwiZXhwIjoxNzQ0MTk3MzUxLCJ0dHAiOiJyZWZyZXNoIiwianRpIjoiMDFKTlpXOUM3QlY2UzQ3NTQwMEM4NEJaSE0iLCJyZmkiOiIwMUpOWlc5QzdCVjZTNDc1NDAwQzg0QlpISyJ9.Mt5Y5iGZKL8rjF8TU4AbEn_TVeTfTvW3fB7z5nlVXY9HD2QfanOJsQBEtiGYgaRpsH7azdiv8E-7hyo7C03WAA",
+        "expiredAt": 1744197351
+    }
+}
+```
 
-### Logout from all devices
+An **access token** is used to authenticate and authorize users, granting them access to protected resources
+without needing to repeatedly log in. It contains user identity and custom claims and is typically
+short-lived to enhance security.
 
----
+A **refresh token** is used to obtain a new access token without requiring the user to log in again.
+It is long-lived and helps maintain user sessions securely while minimizing exposure of credentials.
+
+### Accessing Protected Resources
+
+- The client includes the access token in the Authorization header (Bearer <access_token>) to make authenticated API requests.
+- The server validates the token and grants access.
+
+User profile request:
+```shell
+curl --location 'localhost:8000/api/auth/user/profile' \
+--header 'Accept: application/json' \
+--header 'Authorization: Bearer YOUR_ACCESS_TOKEN'
+```
+
+### Token Expiration & Refresh Request
+
+- When the access token expires, the client sends a request to the token refresh endpoint (/refresh).
+- The request includes the refresh token.
+- The server verifies the refresh token (e.g., checks its validity and ensures it is not revoked). 
+- If valid, the server issues a new access token and refresh token.
+- The client replaces the expired access token and refresh token with new ones.
+
+Refresh Request:
+```shell
+curl --location 'localhost:8000/api/auth/user/refresh' \
+--header 'Accept: application/json' \
+--header 'Content-Type: application/json' \
+--data '{
+    "token": "YOUR_REFRESH_TOKEN"
+}'
+```
+
+Refresh Response
+```json
+{
+    "access": {
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.eyJpc3MiOiJDdXN0b21Jc3N1ZXIiLCJzdWIiOjEsImF1ZCI6ImYyYjc1ZjdiMDU5ZDNhNTQiLCJuYmYiOjE3NDE2MDUxNDYsImlhdCI6MTc0MTYwNTE0NiwiZXhwIjoxNzQxNjA2MDQ2LCJ0dHAiOiJhY2Nlc3MiLCJqdGkiOiIwMUpOWlczM01DQTE0S0RIREZDSDlSOVpITSIsInJmaSI6IjAxSk5aVzMzTUNBMTRLREhERkNIOVI5WkhOIiwicm9sZSI6InVzZXIifQ.3r-QWdnyy9OGIYiMS4wGhm-aicnvtAEswte10uuA4kXOC4wsp2f94kOC-VdxawEc6SqwZPRKWmrMVuUKGBWHAQ",
+        "expiredAt": 1741606046
+    },
+    "refresh": {
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.eyJpc3MiOiJDdXN0b21Jc3N1ZXIiLCJzdWIiOjEsImF1ZCI6ImYyYjc1ZjdiMDU5ZDNhNTQiLCJuYmYiOjE3NDE2MDUxNDYsImlhdCI6MTc0MTYwNTE0NiwiZXhwIjoxNzQ0MTk3MTQ2LCJ0dHAiOiJyZWZyZXNoIiwianRpIjoiMDFKTlpXMzNNQ0ExNEtESERGQ0g5UjlaSE4iLCJyZmkiOiIwMUpOWlczM01DQTE0S0RIREZDSDlSOVpITSJ9.t1SWCvJuP7SNpVPAm7p57YH0l8TrZvcgnozQtuVGeMNXBpthJNo3B7O3N3WsI0Pb_Key-zzTP8aQUG3NSbK7AA",
+        "expiredAt": 1744197146
+    }
+}
+```
+
+### Logout or Token Revocation
+
+- If the user logs out, the refresh token should be revoked (e.g., removed from a database or a blacklist).
+- If a refresh token is compromised, the user must re-authenticate.
+
+Logout request:
+```shell
+curl --location --request POST 'localhost:8000/api/auth/user/logout' \
+--header 'Accept: application/json' \
+--header 'Authorization: Bearer YOUR_ACCESS_TOKEN'
+```
+
+Logout from all devices request:
+```shell
+curl --location --request POST 'localhost:8000/api/auth/user/logout/all' \
+--header 'Accept: application/json' \
+--header 'Authorization: Bearer YOUR_ACCESS_TOKEN'
+```
 
 ## Customization
 
