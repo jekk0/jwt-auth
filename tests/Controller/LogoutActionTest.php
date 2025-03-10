@@ -20,8 +20,8 @@ class LogoutActionTest extends TestCase
     {
         $app['config']->set([
             'app.key' => 'D61EMLTbWd/1wRN5LeYq5G94jBcEVF/x1xeIOgjoWNc=',
-            'auth.guards.user.driver' => 'jwt',
-            'auth.guards.user.provider' => 'users',
+            'auth.guards.jwt-user.driver' => 'jwt',
+            'auth.guards.jwt-user.provider' => 'users',
             'auth.providers.users.model' => User::class,
             'database.default' => 'testing',
             'jwtauth.public_key' => 'iVUKxPqZFLMD/MLONKvXMA47Yk4uUqzSgHAHSEiBRjQ=',
@@ -32,21 +32,21 @@ class LogoutActionTest extends TestCase
     protected function defineRoutes($router)
     {
         $router->post('api/logout', function () {
-            auth('user')->logout();
+            auth('jwt-user')->logout();
             return new JsonResponse(['message' => 'Successfully logged out']);
-        })->middleware('auth:user');
+        })->middleware('auth:jwt-user');
 
         $router->post('api/logout/all', function () {
-            auth('user')->logoutFromAllDevices();
+            auth('jwt-user')->logoutFromAllDevices();
             return new JsonResponse(['message' => 'Successfully logged out from all devices']);
-        })->middleware('auth:user');
+        })->middleware('auth:jwt-user');
     }
 
     public function test_logout(): void
     {
         $user = UserFactory::new()->create();
 
-        auth('user')->login($user);
+        auth('jwt-user')->login($user);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
 
@@ -106,11 +106,11 @@ TOKEN;
     {
         $user = UserFactory::new()->create();
         // Create first session
-        auth('user')->login($user);
+        auth('jwt-user')->login($user);
         // Create second session
-        auth('user')->login($user);
+        auth('jwt-user')->login($user);
         // Create third session
-        auth('user')->login($user);
+        auth('jwt-user')->login($user);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 3);
 

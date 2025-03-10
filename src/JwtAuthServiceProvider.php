@@ -25,7 +25,7 @@ final class JwtAuthServiceProvider extends ServiceProvider
         $this->app->bind(TokenExtractorContract::class, TokenExtractor::class);
         $this->app->bind(TokenIssuerContract::class, TokenIssuer::class);
         $this->app->bind(JwtClockContract::class, static function () {
-            return new SystemClock(new \DateTimeZone('UTC'));
+            return SystemClock::fromUTC();
         });
 
         $this->app->singleton(TokenManagerContract::class, static function (Application $app) {
@@ -58,6 +58,7 @@ final class JwtAuthServiceProvider extends ServiceProvider
                 $tokenManager = $app->get(TokenManagerContract::class);
                 $tokenManager->setTokenIssuer(($app->get(TokenIssuerContract::class))($app->get('request')));
                 $guard = new RequestGuard(
+                    $name,
                     new Auth(
                         $tokenManager,
                         $auth->createUserProvider($config['provider']),

@@ -30,7 +30,7 @@ class RequestGuardTest extends TestCase
     {
         $credentials = ['email' => 'example.com', 'password' => '123456'];
         $user = new User(['id' => 29]);
-
+        $guardName = 'jwt-user';
         $auth = $this->createMock(Auth::class);
         $auth->expects($this->once())->method('retrieveByCredentials')->with($credentials)->willReturn($user);
         $auth->expects($this->once())->method('hasValidCredentials')->with($user, $credentials)->willReturn(true);
@@ -43,10 +43,10 @@ class RequestGuardTest extends TestCase
 
         $tokenExtractor = $this->createMock(TokenExtractor::class);
 
-        $expectedEvent1 = new JwtAttempting($credentials);
-        $expectedEvent2 = new JwtValidated($user);
-        $expectedEvent3 = new JwtLogin($user);
-        $expectedEvent4 = new JwtAuthenticated($user, $tokenPair->access);
+        $expectedEvent1 = new JwtAttempting($guardName, $credentials);
+        $expectedEvent2 = new JwtValidated($guardName, $user);
+        $expectedEvent3 = new JwtLogin($guardName, $user);
+        $expectedEvent4 = new JwtAuthenticated($guardName, $user, $tokenPair->access);
 
         $dispatcher = $this->createMock(Dispatcher::class);
         $dispatcher->expects($matcher = $this->exactly(4))->method('dispatch')->willReturnCallback(
@@ -61,7 +61,7 @@ class RequestGuardTest extends TestCase
         );
 
         $request = Request::create('');
-        $guard = new RequestGuard($auth, $tokenExtractor, $dispatcher, $request);
+        $guard = new RequestGuard($guardName, $auth, $tokenExtractor, $dispatcher, $request);
 
         $result = $guard->attempt($credentials);
 
@@ -76,13 +76,13 @@ class RequestGuardTest extends TestCase
     public function test_attempt_user_not_found(): void
     {
         $credentials = ['email' => 'example.com', 'password' => '123456'];
-
+        $guardName = 'jwt-user';
         $auth = $this->createMock(Auth::class);
         $auth->expects($this->once())->method('retrieveByCredentials')->with($credentials)->willReturn(null);
         $tokenExtractor = $this->createMock(TokenExtractor::class);
 
-        $expectedEvent1 = new JwtAttempting($credentials);
-        $expectedEvent2 = new JwtFailed(null, $credentials);
+        $expectedEvent1 = new JwtAttempting($guardName, $credentials);
+        $expectedEvent2 = new JwtFailed($guardName, null, $credentials);
 
         $dispatcher = $this->createMock(Dispatcher::class);
         $dispatcher->expects($matcher = $this->exactly(2))->method('dispatch')->willReturnCallback(
@@ -95,7 +95,7 @@ class RequestGuardTest extends TestCase
         );
 
         $request = Request::create('');
-        $guard = new RequestGuard($auth, $tokenExtractor, $dispatcher, $request);
+        $guard = new RequestGuard($guardName, $auth, $tokenExtractor, $dispatcher, $request);
 
         $result = $guard->attempt($credentials);
 
@@ -111,14 +111,14 @@ class RequestGuardTest extends TestCase
     {
         $credentials = ['email' => 'example.com', 'password' => '123456'];
         $user = new User(['id' => 29]);
-
+        $guardName = 'jwt-user';
         $auth = $this->createMock(Auth::class);
         $auth->expects($this->once())->method('retrieveByCredentials')->with($credentials)->willReturn($user);
         $auth->expects($this->once())->method('hasValidCredentials')->with($user, $credentials)->willReturn(false);
         $tokenExtractor = $this->createMock(TokenExtractor::class);
 
-        $expectedEvent1 = new JwtAttempting($credentials);
-        $expectedEvent2 = new JwtFailed($user, $credentials);
+        $expectedEvent1 = new JwtAttempting($guardName, $credentials);
+        $expectedEvent2 = new JwtFailed($guardName, $user, $credentials);
 
         $dispatcher = $this->createMock(Dispatcher::class);
         $dispatcher->expects($matcher = $this->exactly(2))->method('dispatch')->willReturnCallback(
@@ -131,7 +131,7 @@ class RequestGuardTest extends TestCase
         );
 
         $request = Request::create('');
-        $guard = new RequestGuard($auth, $tokenExtractor, $dispatcher, $request);
+        $guard = new RequestGuard($guardName, $auth, $tokenExtractor, $dispatcher, $request);
 
         $result = $guard->attempt($credentials);
 
@@ -147,14 +147,14 @@ class RequestGuardTest extends TestCase
     {
         $credentials = ['email' => 'example.com', 'password' => '123456'];
         $user = new User(['id' => 29]);
-
+        $guardName = 'jwt-user';
         $auth = $this->createMock(Auth::class);
         $auth->expects($this->once())->method('retrieveByCredentials')->with($credentials)->willReturn($user);
         $auth->expects($this->once())->method('hasValidCredentials')->with($user, $credentials)->willReturn(false);
         $tokenExtractor = $this->createMock(TokenExtractor::class);
 
-        $expectedEvent1 = new JwtAttempting($credentials);
-        $expectedEvent2 = new JwtFailed($user, $credentials);
+        $expectedEvent1 = new JwtAttempting($guardName, $credentials);
+        $expectedEvent2 = new JwtFailed($guardName, $user, $credentials);
 
         $dispatcher = $this->createMock(Dispatcher::class);
         $dispatcher->expects($matcher = $this->exactly(2))->method('dispatch')->willReturnCallback(
@@ -167,7 +167,7 @@ class RequestGuardTest extends TestCase
         );
 
         $request = Request::create('');
-        $guard = new RequestGuard($auth, $tokenExtractor, $dispatcher, $request);
+        $guard = new RequestGuard($guardName, $auth, $tokenExtractor, $dispatcher, $request);
 
         $this->expectException(AuthenticationException::class);
 
@@ -177,7 +177,7 @@ class RequestGuardTest extends TestCase
     public function test_login(): void
     {
         $user = new User(['id' => 71]);
-
+        $guardName = 'jwt-user';
         $auth = $this->createMock(Auth::class);
         $auth->expects($this->once())->method('createTokenPair')->with($user)->willReturn(
             $tokenPair = new TokenPair(
@@ -188,8 +188,8 @@ class RequestGuardTest extends TestCase
 
         $tokenExtractor = $this->createMock(TokenExtractor::class);
 
-        $expectedEvent1 = new JwtLogin($user);
-        $expectedEvent2 = new JwtAuthenticated($user, $tokenPair->access);
+        $expectedEvent1 = new JwtLogin($guardName, $user);
+        $expectedEvent2 = new JwtAuthenticated($guardName, $user, $tokenPair->access);
 
         $dispatcher = $this->createMock(Dispatcher::class);
         $dispatcher->expects($matcher = $this->exactly(2))->method('dispatch')->willReturnCallback(
@@ -202,7 +202,7 @@ class RequestGuardTest extends TestCase
         );
 
         $request = Request::create('');
-        $guard = new RequestGuard($auth, $tokenExtractor, $dispatcher, $request);
+        $guard = new RequestGuard($guardName, $auth, $tokenExtractor, $dispatcher, $request);
 
         $result = $guard->login($user);
 
@@ -221,11 +221,12 @@ class RequestGuardTest extends TestCase
             'jwt',
             new Payload(['jti' => '1', 'sub' => $user->id, 'exp' => time(), 'rfi' => 'UUAI', 'ttp' => TokenType::Access->value])
         );
+        $guardName = 'jwt-user';
         $auth = $this->createMock(Auth::class);
         $auth->expects($this->once())->method('revokeRefreshToken')->with($accessToken->payload->getReferenceTokenId());
         $auth->expects($this->never())->method('decodeToken');
-        $expectedEvent1 = new JwtAuthenticated($user, $accessToken);
-        $expectedEvent2 = new JwtLogout($user);
+        $expectedEvent1 = new JwtAuthenticated($guardName, $user, $accessToken);
+        $expectedEvent2 = new JwtLogout($guardName, $user);
 
         $dispatcher = $this->createMock(Dispatcher::class);
         $dispatcher->expects($matcher = $this->exactly(2))->method('dispatch')->willReturnCallback(
@@ -240,7 +241,7 @@ class RequestGuardTest extends TestCase
         $request = Request::create('https://example.com/');
         $request->headers->set('Authorization', "Bearer {$accessToken->token}");
 
-        $guard = new RequestGuard($auth, new \Jekk0\JwtAuth\TokenExtractor(), $dispatcher, $request);
+        $guard = new RequestGuard($guardName, $auth, new \Jekk0\JwtAuth\TokenExtractor(), $dispatcher, $request);
         $guard->setToken($accessToken);
         $guard->setUser($user);
 
@@ -261,12 +262,13 @@ class RequestGuardTest extends TestCase
             'jwt',
             new Payload(['jti' => '1', 'sub' => $user->id, 'exp' => time(), 'rfi' => 'UUAI', 'ttp' => TokenType::Access->value])
         );
+        $guardName = 'jwt-user';
         $auth = $this->createMock(Auth::class);
         $auth->expects($this->once())->method('revokeAllRefreshTokens')->with($user);
         $auth->expects($this->never())->method('decodeToken');
 
-        $expectedEvent1 = new JwtAuthenticated($user, $accessToken);
-        $expectedEvent2 = new JwtLogoutFromAllDevices($user);
+        $expectedEvent1 = new JwtAuthenticated($guardName, $user, $accessToken);
+        $expectedEvent2 = new JwtLogoutFromAllDevices($guardName, $user);
 
         $dispatcher = $this->createMock(Dispatcher::class);
         $dispatcher->expects($matcher = $this->exactly(2))->method('dispatch')->willReturnCallback(
@@ -280,7 +282,7 @@ class RequestGuardTest extends TestCase
 
         $request = Request::create('https://example.com/');
         $request->headers->set('Authorization', "Bearer {$accessToken->token}");
-        $guard = new RequestGuard($auth, new \Jekk0\JwtAuth\TokenExtractor(), $dispatcher, $request);
+        $guard = new RequestGuard($guardName, $auth, new \Jekk0\JwtAuth\TokenExtractor(), $dispatcher, $request);
         $guard->setToken($accessToken);
         $guard->setUser($user);
 
@@ -300,7 +302,7 @@ class RequestGuardTest extends TestCase
             'jwt',
             new Payload(['jti' => 'AAAA', 'sub' => $user->id, 'exp' => time(), 'rfi' => 'NNN', 'ttp' => TokenType::Refresh->value])
         );
-
+        $guardName = 'jwt-user';
         $auth = $this->createMock(Auth::class);
         $auth->expects($this->once())->method('decodeToken')->with($refreshToken->token)->willReturn($refreshToken);
         $auth->expects($this->once())->method('retrieveByPayload')->with($refreshToken->payload)->willReturn($user);
@@ -313,9 +315,9 @@ class RequestGuardTest extends TestCase
         );
         $tokenExtractor = $this->createMock(TokenExtractor::class);
 
-        $expectedEvent1 = new JwtTokenRefresh($user, $refreshToken);
-        $expectedEvent2 = new JwtLogin($user);
-        $expectedEvent3 = new JwtAuthenticated($user, $tokenPair->access);
+        $expectedEvent1 = new JwtTokenRefresh($guardName, $user, $refreshToken);
+        $expectedEvent2 = new JwtLogin($guardName, $user);
+        $expectedEvent3 = new JwtAuthenticated($guardName, $user, $tokenPair->access);
 
         $dispatcher = $this->createMock(Dispatcher::class);
         $dispatcher->expects($matcher = $this->exactly(3))->method('dispatch')->willReturnCallback(
@@ -329,7 +331,7 @@ class RequestGuardTest extends TestCase
         );
 
         $request = Request::create('');
-        $guard = new RequestGuard($auth, $tokenExtractor, $dispatcher, $request);
+        $guard = new RequestGuard($guardName, $auth, $tokenExtractor, $dispatcher, $request);
 
         $result = $guard->refreshTokens($tokenPair->refresh->token);
 
@@ -343,12 +345,13 @@ class RequestGuardTest extends TestCase
             'jwt',
             new Payload(['jti' => 'QWERT', 'sub' => $user->id, 'exp' => time(), 'rfi' => 'UUAI', 'ttp' => TokenType::Access->value])
         );
+        $guardName = 'jwt-user';
         $auth = $this->createMock(Auth::class);
         $auth->expects($this->once())->method('decodeToken')->with($accessToken->token)->willReturn($accessToken);
         $auth->expects($this->once())->method('retrieveByPayload')->with($accessToken->payload)->willReturn($user);
 
-        $expectedEvent1 = new JwtAccessTokenDecoded($accessToken);
-        $expectedEvent2 = new JwtAuthenticated($user, $accessToken);
+        $expectedEvent1 = new JwtAccessTokenDecoded($guardName, $accessToken);
+        $expectedEvent2 = new JwtAuthenticated($guardName, $user, $accessToken);
 
         $dispatcher = $this->createMock(Dispatcher::class);
         $dispatcher->expects($matcher = $this->exactly(2))->method('dispatch')->willReturnCallback(
@@ -362,7 +365,7 @@ class RequestGuardTest extends TestCase
 
         $request = Request::create('https://example.com/');
         $request->headers->set('Authorization', "Bearer {$accessToken->token}");
-        $guard = new RequestGuard($auth, new \Jekk0\JwtAuth\TokenExtractor(), $dispatcher, $request);
+        $guard = new RequestGuard($guardName, $auth, new \Jekk0\JwtAuth\TokenExtractor(), $dispatcher, $request);
 
         $result = $guard->user();
 
@@ -381,6 +384,7 @@ class RequestGuardTest extends TestCase
             'jwt',
             new Payload(['jti' => 'QWERT', 'sub' => $user->id, 'exp' => time(), 'rfi' => 'UUAI', 'ttp' => TokenType::Refresh->value])
         );
+        $guardName = 'jwt-user';
         $auth = $this->createMock(Auth::class);
         //        $auth->expects($this->once())->method('decodeToken')->with($refreshToken->token)->willReturn($refreshToken);
         $auth->expects($this->any())->method('decodeToken')->with($refreshToken->token)->willReturn($refreshToken);
@@ -390,7 +394,7 @@ class RequestGuardTest extends TestCase
         $dispatcher->expects($this->exactly(0))->method('dispatch');
         $request = Request::create('https://example.com/');
         $request->headers->set('Authorization', "Bearer {$refreshToken->token}");
-        $guard = new RequestGuard($auth, new \Jekk0\JwtAuth\TokenExtractor(), $dispatcher, $request);
+        $guard = new RequestGuard($guardName, $auth, new \Jekk0\JwtAuth\TokenExtractor(), $dispatcher, $request);
 
         $result = $guard->user();
 
@@ -409,11 +413,12 @@ class RequestGuardTest extends TestCase
             'jwt',
             new Payload(['jti' => '1', 'sub' => $user->id, 'exp' => time(), 'rfi' => 'UUAI', 'ttp' => TokenType::Access->value])
         );
+        $guardName = 'jwt-user';
         $auth = $this->createMock(Auth::class);
         $dispatcher = $this->createMock(Dispatcher::class);
 
         $request = Request::create('https://example.com/');
-        $guard = new RequestGuard($auth, new \Jekk0\JwtAuth\TokenExtractor(), $dispatcher, $request);
+        $guard = new RequestGuard($guardName, $auth, new \Jekk0\JwtAuth\TokenExtractor(), $dispatcher, $request);
         $guard->setToken($accessToken);
         $guard->setUser($user);
 
@@ -424,11 +429,12 @@ class RequestGuardTest extends TestCase
 
     public function test_get_access_token_unauthenticated(): void
     {
+        $guardName = 'jwt-user';
         $auth = $this->createMock(Auth::class);
         $dispatcher = $this->createMock(Dispatcher::class);
 
         $request = Request::create('https://example.com/');
-        $guard = new RequestGuard($auth, new \Jekk0\JwtAuth\TokenExtractor(), $dispatcher, $request);
+        $guard = new RequestGuard($guardName, $auth, new \Jekk0\JwtAuth\TokenExtractor(), $dispatcher, $request);
 
         $result = $guard->getAccessToken();
 
@@ -439,7 +445,7 @@ class RequestGuardTest extends TestCase
     {
         $credentials = ['email' => 'example.com', 'password' => '123456'];
         $user = new User(['id' => 59]);
-
+        $guardName = 'jwt-user';
         $auth = $this->createMock(Auth::class);
         $auth->expects($this->once())->method('retrieveByCredentials')->with($credentials)->willReturn($user);
         $auth->expects($this->once())->method('hasValidCredentials')->with($user, $credentials)->willReturn(true);
@@ -447,7 +453,7 @@ class RequestGuardTest extends TestCase
         $dispatcher = $this->createMock(Dispatcher::class);
 
         $request = Request::create('');
-        $guard = new RequestGuard($auth, $tokenExtractor, $dispatcher, $request);
+        $guard = new RequestGuard($guardName, $auth, $tokenExtractor, $dispatcher, $request);
 
         $result = $guard->validate($credentials);
 
@@ -456,35 +462,16 @@ class RequestGuardTest extends TestCase
 
     public function test_has_user_null(): void
     {
+        $guardName = 'jwt-user';
         $auth = $this->createMock(Auth::class);
         $tokenExtractor = $this->createMock(TokenExtractor::class);
         $dispatcher = $this->createMock(Dispatcher::class);
 
         $request = Request::create('');
-        $guard = new RequestGuard($auth, $tokenExtractor, $dispatcher, $request);
+        $guard = new RequestGuard($guardName, $auth, $tokenExtractor, $dispatcher, $request);
 
         $result = $guard->hasUser();
 
         self::assertFalse($result);
     }
-    //
-    //    public function test_check(): void
-    //    {
-    //    }
-    //
-    //    public function test_guest(): void
-    //    {
-    //    }
-    //
-    //    public function test_id(): void
-    //    {
-    //    }
-    //
-    //    public function test_set_user(): void
-    //    {
-    //    }
-    //
-    //    public function test_set_request(): void
-    //    {
-    //    }
 }

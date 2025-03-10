@@ -19,8 +19,8 @@ class AuthenticateTest extends TestCase
     {
         $app['config']->set([
             'app.key' => 'D61EMLTbWd/1wRN5LeYq5G94jBcEVF/x1xeIOgjoWNc=',
-            'auth.guards.user.driver' => 'jwt',
-            'auth.guards.user.provider' => 'users',
+            'auth.guards.jwt-user.driver' => 'jwt',
+            'auth.guards.jwt-user.provider' => 'users',
             'auth.providers.users.model' => User::class,
             'database.default' => 'testing',
             'jwtauth.public_key' => 'iVUKxPqZFLMD/MLONKvXMA47Yk4uUqzSgHAHSEiBRjQ=',
@@ -32,7 +32,7 @@ class AuthenticateTest extends TestCase
     {
         $router->post('api/profile', function () {
             return new JsonResponse();
-        })->middleware('auth:user');
+        })->middleware('auth:jwt-user');
     }
 
     public function test_authenticate(): void
@@ -51,7 +51,7 @@ class AuthenticateTest extends TestCase
     public function test_authenticate_in_tests(): void
     {
         $user = UserFactory::new()->create();
-        $response = $this->actingAs($user, 'user')->postJson(
+        $response = $this->actingAs($user, 'jwt-user')->postJson(
             '/api/profile',
             ['origin' => config('app.url')],
         );

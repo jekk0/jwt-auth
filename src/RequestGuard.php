@@ -16,7 +16,6 @@ use Jekk0\JwtAuth\Events\JwtLogin;
 use Jekk0\JwtAuth\Events\JwtLogout;
 use Jekk0\JwtAuth\Events\JwtLogoutFromAllDevices;
 use Jekk0\JwtAuth\Events\JwtTokenRefresh;
-use Jekk0\JwtAuth\Events\JwtRefreshTokenDecoded;
 use Jekk0\JwtAuth\Events\JwtValidated;
 use Jekk0\JwtAuth\Exceptions\TokenDecodeException;
 use Jekk0\JwtAuth\Exceptions\TokenInvalidType;
@@ -29,6 +28,7 @@ final class RequestGuard implements JwtGuardContract
     private bool $loggedOut = false;
 
     public function __construct(
+        private readonly string $guard,
         private readonly Auth $jwtAuth,
         private readonly TokenExtractorContract $tokenExtractor,
         private readonly Dispatcher $dispatcher,
@@ -38,17 +38,17 @@ final class RequestGuard implements JwtGuardContract
 
     public function attempt(array $credentials): ?TokenPair
     {
-        $this->dispatcher->dispatch(new JwtAttempting($credentials));
+        $this->dispatcher->dispatch(new JwtAttempting($this->guard, $credentials));
 
         $user = $this->jwtAuth->retrieveByCredentials($credentials);
 
         if ($user === null || $this->jwtAuth->hasValidCredentials($user, $credentials) === false) {
-            $this->dispatcher->dispatch(new JwtFailed($user, $credentials));
+            $this->dispatcher->dispatch(new JwtFailed($this->guard, $user, $credentials));
 
             return null;
         }
 
-        $this->dispatcher->dispatch(new JwtValidated($user));
+        $this->dispatcher->dispatch(new JwtValidated($this->guard, $user));
 
 
         return $this->login($user);
@@ -69,7 +69,7 @@ final class RequestGuard implements JwtGuardContract
     {
         $tokenPair = $this->jwtAuth->createTokenPair($user);
 
-        $this->dispatcher->dispatch(new JwtLogin($user));
+        $this->dispatcher->dispatch(new JwtLogin($this->guard, $user));
 
         $this->setToken( $tokenPair->access);
         $this->setUser($user);
@@ -82,7 +82,7 @@ final class RequestGuard implements JwtGuardContract
         if ($this->user()) {
             $this->jwtAuth->revokeRefreshToken($this->accessToken->payload->getReferenceTokenId());
 
-            $this->dispatcher->dispatch(new JwtLogout($this->user()));
+            $this->dispatcher->dispatch(new JwtLogout($this->guard, $this->user()));
         }
 
         $this->forgetUser();
@@ -93,7 +93,7 @@ final class RequestGuard implements JwtGuardContract
         if ($this->user()) {
             $this->jwtAuth->revokeAllRefreshTokens($this->user());
 
-            $this->dispatcher->dispatch(new JwtLogoutFromAllDevices($this->user()));
+            $this->dispatcher->dispatch(new JwtLogoutFromAllDevices($this->guard, $this->user()));
         }
 
         $this->forgetUser();
@@ -108,7 +108,7 @@ final class RequestGuard implements JwtGuardContract
             }
 
             $user = $this->jwtAuth->retrieveByPayload($token->payload);
-            $this->dispatcher->dispatch(new JwtTokenRefresh($user, $token));
+            $this->dispatcher->dispatch(new JwtTokenRefresh($this->guard, $user, $token));
             $this->jwtAuth->revokeRefreshToken($token->payload->getJwtId());
 
             return $this->login($user);
@@ -140,7 +140,7 @@ final class RequestGuard implements JwtGuardContract
                 throw new TokenInvalidType('Invalid JWT token type. Expected access token.');
             }
 
-            $this->dispatcher->dispatch(new JwtAccessTokenDecoded($accessToken));
+            $this->dispatcher->dispatch(new JwtAccessTokenDecoded($this->guard, $accessToken));
 
             $user = $this->jwtAuth->retrieveByPayload($accessToken->payload);
 
@@ -198,7 +198,7 @@ final class RequestGuard implements JwtGuardContract
         $this->user = $user;
         $this->loggedOut = false;
 
-        $this->dispatcher->dispatch(new JwtAuthenticated($user, $this->accessToken));
+        $this->dispatcher->dispatch(new JwtAuthenticated($this->guard, $user, $this->accessToken));
 
         return $this;
     }

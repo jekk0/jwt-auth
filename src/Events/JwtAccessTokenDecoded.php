@@ -10,6 +10,7 @@ class JwtAccessTokenDecoded
     use SerializesModels;
 
     public function __construct(
+        public readonly string $guard,
         public readonly Token $accessToken
     ) {
     }

@@ -55,8 +55,8 @@ class CustomClockTest extends TestCase
     {
         $app['config']->set([
             'app.key' => 'D61EMLTbWd/1wRN5LeYq5G94jBcEVF/x1xeIOgjoWNc=',
-            'auth.guards.user.driver' => 'jwt',
-            'auth.guards.user.provider' => 'users',
+            'auth.guards.jwt-user.driver' => 'jwt',
+            'auth.guards.jwt-user.provider' => 'users',
             'auth.providers.users.model' => User::class,
             'database.default' => 'testing',
             'jwtauth.public_key' => 'iVUKxPqZFLMD/MLONKvXMA47Yk4uUqzSgHAHSEiBRjQ=',
@@ -71,7 +71,7 @@ class CustomClockTest extends TestCase
         $router->post('api/login', function (Request $request) {
             $credentials = $request->only('email', 'password');
 
-            $tokenPair = auth('user')->attemptOrFail($credentials);
+            $tokenPair = auth('jwt-user')->attemptOrFail($credentials);
 
             return new JsonResponse($tokenPair->toArray());
         });

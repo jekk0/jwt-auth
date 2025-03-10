@@ -11,6 +11,7 @@ class JwtAuthenticated
     use SerializesModels;
 
     public function __construct(
+        public readonly string $guard,
         public readonly Authenticatable $user,
         public readonly ?Token $accessToken
     ) {

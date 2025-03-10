@@ -22,8 +22,8 @@ class RefreshActionTest extends TestCase
     {
         $app['config']->set([
             'app.key' => 'D61EMLTbWd/1wRN5LeYq5G94jBcEVF/x1xeIOgjoWNc=',
-            'auth.guards.user.driver' => 'jwt',
-            'auth.guards.user.provider' => 'users',
+            'auth.guards.jwt-user.driver' => 'jwt',
+            'auth.guards.jwt-user.provider' => 'users',
             'auth.providers.users.model' => User::class,
             'database.default' => 'testing',
             'jwtauth.public_key' => 'iVUKxPqZFLMD/MLONKvXMA47Yk4uUqzSgHAHSEiBRjQ=',
@@ -34,7 +34,7 @@ class RefreshActionTest extends TestCase
     protected function defineRoutes($router)
     {
         $router->post('api/refresh', function (Request $request) {
-            $tokenPair = auth('user')->refreshTokens($request->bearerToken());
+            $tokenPair = auth('jwt-user')->refreshTokens($request->bearerToken());
             return new JsonResponse($tokenPair->toArray());
         });
     }
@@ -42,7 +42,7 @@ class RefreshActionTest extends TestCase
     public function test_refresh(): void
     {
         $user = UserFactory::new()->create();
-        $tokenPair = auth('user')->login($user);
+        $tokenPair = auth('jwt-user')->login($user);
 
         $response = $this->postJson(
             '/api/refresh',
@@ -92,7 +92,7 @@ class RefreshActionTest extends TestCase
     public function test_refresh_with_access_token(): void
     {
         $user = UserFactory::new()->create();
-        $tokenPair = auth('user')->login($user);
+        $tokenPair = auth('jwt-user')->login($user);
 
         $response = $this->postJson(
             '/api/refresh',
