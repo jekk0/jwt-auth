@@ -15,7 +15,8 @@ use Jekk0\JwtAuth\Events\JwtLogin;
 use Jekk0\JwtAuth\Events\JwtLogout;
 use Jekk0\JwtAuth\Events\JwtLogoutFromAllDevices;
 use Jekk0\JwtAuth\Events\JwtRefreshTokenCompromised;
-use Jekk0\JwtAuth\Events\JwtTokenRefresh;
+use Jekk0\JwtAuth\Events\JwtRefreshTokenDecoded;
+use Jekk0\JwtAuth\Events\JwtTokensRefreshed;
 use Jekk0\JwtAuth\Events\JwtValidated;
 use Jekk0\JwtAuth\Model\JwtRefreshToken;
 use Jekk0\JwtAuth\Payload;
@@ -319,17 +320,19 @@ class RequestGuardTest extends TestCase
         );
         $tokenExtractor = $this->createMock(TokenExtractor::class);
 
-        $expectedEvent1 = new JwtTokenRefresh($guardName, $user, $refreshToken);
+        $expectedEvent1 = new JwtRefreshTokenDecoded($guardName, $refreshToken);
         $expectedEvent2 = new JwtLogin($guardName, $user);
         $expectedEvent3 = new JwtAuthenticated($guardName, $user, $tokenPair->access);
+        $expectedEvent4 = new JwtTokensRefreshed($guardName, $user, $tokenPair);
 
         $dispatcher = $this->createMock(Dispatcher::class);
-        $dispatcher->expects($matcher = $this->exactly(3))->method('dispatch')->willReturnCallback(
-            function ($event) use ($matcher, $expectedEvent1, $expectedEvent2, $expectedEvent3) {
+        $dispatcher->expects($matcher = $this->exactly(4))->method('dispatch')->willReturnCallback(
+            function ($event) use ($matcher, $expectedEvent1, $expectedEvent2, $expectedEvent3, $expectedEvent4) {
                 match ($matcher->numberOfInvocations()) {
                     1 => $this->assertEquals($expectedEvent1, $event),
                     2 => $this->assertEquals($expectedEvent2, $event),
                     3 => $this->assertEquals($expectedEvent3, $event),
+                    4 => $this->assertEquals($expectedEvent4, $event),
                 };
             }
         );
@@ -340,6 +343,40 @@ class RequestGuardTest extends TestCase
         $result = $guard->refreshTokens($refreshToken->token);
 
         self::assertSame($tokenPair, $result);
+    }
+
+    public function test_refresh_tokens_user_not_found(): void
+    {
+        $user = new User(['id' => 89]);
+        $refreshToken = new Token(
+            'jwt',
+            new Payload(['jti' => 'AAAA', 'sub' => $user->id, 'exp' => time(), 'rfi' => 'NNN', 'ttp' => TokenType::Refresh->value])
+        );
+        $guardName = 'jwt-user';
+        $auth = $this->createMock(Auth::class);
+        $auth->expects($this->once())->method('decodeToken')->with($refreshToken->token)->willReturn($refreshToken);
+        $auth->expects($this->once())->method('retrieveByPayload')->with($refreshToken->payload)->willReturn(null);
+        $auth->expects($this->never())->method('getRefreshToken');
+        $auth->expects($this->never())->method('revokeRefreshToken');
+        $auth->expects($this->never())->method('createTokenPair');
+        $tokenExtractor = $this->createMock(TokenExtractor::class);
+
+        $expectedEvent1 = new JwtRefreshTokenDecoded($guardName, $refreshToken);
+
+        $dispatcher = $this->createMock(Dispatcher::class);
+        $dispatcher->expects($matcher = $this->exactly(1))->method('dispatch')->willReturnCallback(
+            function ($event) use ($matcher, $expectedEvent1) {
+                match ($matcher->numberOfInvocations()) {
+                    1 => $this->assertEquals($expectedEvent1, $event),
+                };
+            }
+        );
+
+        $request = Request::create('');
+        $guard = new RequestGuard($guardName, $auth, $tokenExtractor, $dispatcher, $request);
+
+        $this->expectException(AuthenticationException::class);
+        $guard->refreshTokens($refreshToken->token);
     }
 
     public function test_refresh_tokens_compromised(): void
@@ -360,13 +397,15 @@ class RequestGuardTest extends TestCase
 
         $tokenExtractor = $this->createMock(TokenExtractor::class);
 
-        $expectedEvent1 = new JwtRefreshTokenCompromised($guardName, $user, $refreshToken);
+        $expectedEvent1 = new JwtRefreshTokenDecoded($guardName, $refreshToken);
+        $expectedEvent2 = new JwtRefreshTokenCompromised($guardName, $user, $refreshToken);
 
         $dispatcher = $this->createMock(Dispatcher::class);
-        $dispatcher->expects($matcher = $this->exactly(1))->method('dispatch')->willReturnCallback(
-            function ($event) use ($matcher, $expectedEvent1) {
+        $dispatcher->expects($matcher = $this->exactly(2))->method('dispatch')->willReturnCallback(
+            function ($event) use ($matcher, $expectedEvent1, $expectedEvent2) {
                 match ($matcher->numberOfInvocations()) {
-                    1 => $this->assertEquals($expectedEvent1, $event)
+                    1 => $this->assertEquals($expectedEvent1, $event),
+                    2 => $this->assertEquals($expectedEvent2, $event)
                 };
             }
         );

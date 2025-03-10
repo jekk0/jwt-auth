@@ -16,9 +16,11 @@ use Jekk0\JwtAuth\Events\JwtLogin;
 use Jekk0\JwtAuth\Events\JwtLogout;
 use Jekk0\JwtAuth\Events\JwtLogoutFromAllDevices;
 use Jekk0\JwtAuth\Events\JwtRefreshTokenCompromised;
-use Jekk0\JwtAuth\Events\JwtTokenRefresh;
+use Jekk0\JwtAuth\Events\JwtRefreshTokenDecoded;
+use Jekk0\JwtAuth\Events\JwtTokensRefreshed;
 use Jekk0\JwtAuth\Events\JwtValidated;
 use Jekk0\JwtAuth\Exceptions\RefreshTokenCompromised;
+use Jekk0\JwtAuth\Exceptions\SubjectNotFound;
 use Jekk0\JwtAuth\Exceptions\TokenDecodeException;
 use Jekk0\JwtAuth\Exceptions\TokenInvalidType;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -109,17 +111,26 @@ final class RequestGuard implements JwtGuardContract
                 throw new TokenInvalidType('Invalid JWT token type. Expected refresh token.');
             }
 
+            $this->dispatcher->dispatch(new JwtRefreshTokenDecoded($this->guard, $token));
+
             $user = $this->jwtAuth->retrieveByPayload($token->payload);
+
+            if ($user === null) {
+                throw new SubjectNotFound();
+            }
+
             if ($this->jwtAuth->getRefreshToken($token->payload->getJwtId()) === null) {
                 $this->dispatcher->dispatch(new JwtRefreshTokenCompromised($this->guard, $user, $token));
+
                 throw new RefreshTokenCompromised();
             }
 
-            $this->dispatcher->dispatch(new JwtTokenRefresh($this->guard, $user, $token));
+            $tokenPair = $this->login($user);
+            $this->dispatcher->dispatch(new JwtTokensRefreshed($this->guard, $user, $tokenPair));
             $this->jwtAuth->revokeRefreshToken($token->payload->getJwtId());
 
-            return $this->login($user);
-        } catch (TokenDecodeException|TokenInvalidType|RefreshTokenCompromised) {
+            return $tokenPair;
+        } catch (TokenDecodeException|TokenInvalidType|RefreshTokenCompromised|SubjectNotFound) {
             throw new AuthenticationException();
         }
     }

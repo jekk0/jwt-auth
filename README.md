@@ -491,13 +491,15 @@ class CustomJwtTokenIssuer extends ServiceProvider
 
 1. Jekk0\JwtAuth\Events\JwtAccessTokenDecoded
 2. Jekk0\JwtAuth\Events\JwtAttempting
-2. Jekk0\JwtAuth\Events\JwtAuthenticated
-3. Jekk0\JwtAuth\Events\JwtFailed 
-4. Jekk0\JwtAuth\Events\JwtLogin 
-5. Jekk0\JwtAuth\Events\JwtLogout 
-6. Jekk0\JwtAuth\Events\JwtLogoutFromAllDevices 
-7. Jekk0\JwtAuth\Events\JwtRefresh 
-8. Jekk0\JwtAuth\Events\JwtValidated
+3. Jekk0\JwtAuth\Events\JwtAuthenticated
+4. Jekk0\JwtAuth\Events\JwtFailed
+5. Jekk0\JwtAuth\Events\JwtLogin
+6. Jekk0\JwtAuth\Events\JwtLogout
+7. Jekk0\JwtAuth\Events\JwtLogoutFromAllDevices
+8. Jekk0\JwtAuth\Events\JwtRefreshTokenCompromised
+9. Jekk0\JwtAuth\Events\JwtRefreshTokenDecoded
+10. Jekk0\JwtAuth\Events\JwtTokensRefreshed
+11. Jekk0\JwtAuth\Events\JwtValidated
 
 ## Functionally testing a JWT protected api
 
@@ -546,50 +548,3 @@ public function test_authenticate(): void
         self::assertSame(200, $response->getStatusCode());
     }
 ```
-
-
-# Development
-
-Run tests
-Macos
-```shell
-XDEBUG_MODE=coverage php vendor/bin/phpunit --coverage-html ./var/cache/coverage
-```
-
-Windows
-```shell
-$env:XDEBUG_MODE="coverage"
-php vendor/bin/phpunit --coverage-html ./var/cache/coverage
-```
-
-run phpstan
-```shell
-php vendor/bin/phpstan analyse
-
-vendor/bin/phpstan analyse --generate-baseline
-```
-
-Run psalm
-```shell
-php vendor/bin/psalm
-```
-
-Update baseline
-```shell
-# This will remove fixed issues, but will not add new issues. To add new issues, use --set-baseline=....
-php vendor/bin/psalm --update-baseline
-
-# In case you want to run psalm without the baseline, run
-php vendor/bin/psalm --ignore-baseline
-
-php vendor/bin/psalm --set-baseline=psalm-baseline.xml
-
-```
-
-Run cs-fixer
-```shell
-php vendor/bin/php-cs-fixer fix
-```
-
-
-php vendor/bin/infection --show-mutations
