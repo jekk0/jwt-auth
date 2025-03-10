@@ -76,7 +76,7 @@ final class RequestGuard implements JwtGuardContract
 
         $this->dispatcher->dispatch(new JwtLogin($this->guard, $user));
 
-        $this->setToken( $tokenPair->access);
+        $this->setToken($tokenPair->access);
         $this->setUser($user);
 
         return $tokenPair;

@@ -10,8 +10,9 @@
          beStrictAboutOutputDuringTests="true"
          failOnRisky="true"
          failOnWarning="true"
-         failOnDeprecation ="true"
-         failOnPhpunitDeprecation ="true">
+         failOnDeprecation="true"
+         failOnPhpunitDeprecation="true"
+         executionOrder="random">
     <php>
         <ini name="display_errors" value="1"/>
         <ini name="error_reporting" value="-1"/>

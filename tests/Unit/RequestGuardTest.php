@@ -223,7 +223,8 @@ class RequestGuardTest extends TestCase
     {
         $user = new User(['id' => 71]);
         $accessToken = new Token(
-            'jwt', new Payload(
+            'jwt',
+            new Payload(
                 ['jti' => '1', 'sub' => $user->id, 'exp' => time(), 'rfi' => 'UUAI', 'ttp' => TokenType::Access->value]
             )
         );
@@ -264,7 +265,8 @@ class RequestGuardTest extends TestCase
     {
         $user = new User(['id' => 71]);
         $accessToken = new Token(
-            'jwt', new Payload(
+            'jwt',
+            new Payload(
                 ['jti' => '1', 'sub' => $user->id, 'exp' => time(), 'rfi' => 'UUAI', 'ttp' => TokenType::Access->value]
             )
         );
@@ -305,7 +307,8 @@ class RequestGuardTest extends TestCase
     {
         $user = new User(['id' => '33']);
         $refreshToken = new Token(
-            'jwt', new Payload(
+            'jwt',
+            new Payload(
                 [
                     'jti' => 'AAAA',
                     'sub' => $user->id,
@@ -356,10 +359,37 @@ class RequestGuardTest extends TestCase
         self::assertSame($tokenPair, $result);
     }
 
+    public function test_refresh_invalid_token_type(): void
+    {
+        $refreshToken = new Token(
+            'jwt',
+            new Payload(
+                ['jti' => 'AAAA', 'sub' => '1234', 'exp' => time(), 'rfi' => 'NNN', 'ttp' => TokenType::Access->value]
+            )
+        );
+        $guardName = 'jwt-user';
+        $auth = $this->createMock(Auth::class);
+        $auth->expects($this->once())->method('decodeToken')->with($refreshToken->token)->willReturn($refreshToken);
+        $auth->expects($this->never())->method('retrieveByPayload');
+        $auth->expects($this->never())->method('getRefreshToken');
+        $auth->expects($this->never())->method('revokeRefreshToken');
+        $auth->expects($this->never())->method('createTokenPair');
+        $tokenExtractor = $this->createMock(TokenExtractor::class);
+
+        $dispatcher = $this->createMock(Dispatcher::class);
+
+        $request = Request::create('');
+        $guard = new RequestGuard($guardName, $auth, $tokenExtractor, $dispatcher, $request);
+
+        $this->expectException(AuthenticationException::class);
+        $guard->refreshTokens($refreshToken->token);
+    }
+
     public function test_refresh_tokens_user_not_found(): void
     {
         $refreshToken = new Token(
-            'jwt', new Payload(
+            'jwt',
+            new Payload(
                 ['jti' => 'AAAA', 'sub' => '1234', 'exp' => time(), 'rfi' => 'NNN', 'ttp' => TokenType::Refresh->value]
             )
         );
@@ -394,7 +424,8 @@ class RequestGuardTest extends TestCase
     {
         $user = new User(['id' => 89]);
         $refreshToken = new Token(
-            'jwt', new Payload(
+            'jwt',
+            new Payload(
                 [
                     'jti' => '1234-abcd',
                     'sub' => $user->id,
@@ -436,7 +467,8 @@ class RequestGuardTest extends TestCase
     {
         $user = new User(['id' => 89]);
         $refreshToken = new Token(
-            'jwt', new Payload(
+            'jwt',
+            new Payload(
                 [
                     'jti' => '1234-abcd',
                     'sub' => $user->id,
@@ -485,7 +517,8 @@ class RequestGuardTest extends TestCase
     {
         $user = new User(['id' => '33']);
         $refreshToken = new Token(
-            'jwt', new Payload(
+            'jwt',
+            new Payload(
                 [
                     'jti' => 'AAAA',
                     'sub' => $user->id,
@@ -532,7 +565,8 @@ class RequestGuardTest extends TestCase
     {
         $user = new User(['id' => '71']);
         $accessToken = new Token(
-            'jwt', new Payload(
+            'jwt',
+            new Payload(
                 [
                     'jti' => 'QWERT',
                     'sub' => $user->id,
@@ -578,7 +612,8 @@ class RequestGuardTest extends TestCase
     {
         $user = new User(['id' => '71']);
         $refreshToken = new Token(
-            'jwt', new Payload(
+            'jwt',
+            new Payload(
                 [
                     'jti' => 'QWERT',
                     'sub' => $user->id,
@@ -614,7 +649,8 @@ class RequestGuardTest extends TestCase
     {
         $user = new User(['id' => 71]);
         $accessToken = new Token(
-            'jwt', new Payload(
+            'jwt',
+            new Payload(
                 ['jti' => '1', 'sub' => $user->id, 'exp' => time(), 'rfi' => 'UUAI', 'ttp' => TokenType::Access->value]
             )
         );
