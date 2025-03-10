@@ -7,6 +7,7 @@ use Jekk0\JwtAuth\Contracts\Auth as JwtAuthContract;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Jekk0\JwtAuth\Contracts\RefreshTokenRepository;
 use Jekk0\JwtAuth\Contracts\TokenManager;
+use Jekk0\JwtAuth\Model\JwtRefreshToken;
 
 final class Auth implements JwtAuthContract
 {
@@ -50,6 +51,11 @@ final class Auth implements JwtAuthContract
         }
 
         return null;
+    }
+
+    public function getRefreshToken(string $jti): ?JwtRefreshToken
+    {
+        return $this->refreshTokenRepository->get($jti);
     }
 
     public function decodeToken(string $token): Token

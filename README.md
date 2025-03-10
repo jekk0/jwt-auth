@@ -149,58 +149,6 @@ use Jekk0\JwtAuth\Model\JwtRefreshToken
 Schedule::command('model:prune', ['--model' => [JwtRefreshToken::class]])->daily();
 ```
 
-### Access Token Invalidation
-
-Since the lifetime of an access token is relatively short (up to one hour, with a default of 15 minutes),
-the package does not invalidate the access token upon logout. Instead, invalidation is only performed
-for the refresh token to avoid additional database query overhead.
-
-It is assumed that the frontend will simply remove the access token from storage upon logout,
-allowing it to expire naturally. However, if token invalidation needs to be enforced on every request,
-this can be implemented using an event-based mechanism.
-
-```php
-php artisan make:listener JwtAccessTokenInvalidation
-```
-
-```php
-<?php
-
-namespace App\Listeners;
-
-use Illuminate\Auth\AuthenticationException;
-use Jekk0\JwtAuth\Events\JwtAccessTokenDecoded;
-use Jekk0\JwtAuth\Model\JwtRefreshToken;
-
-class JwtAccessTokenInvalidation
-{
-
-    public function handle(JwtAccessTokenDecoded $event): void
-    {
-        // Solution 1
-        $accessTokenId = $event->accessToken->payload->getJwtId();
-        $refreshToken = JwtRefreshToken::whereAccessTokenJti($accessTokenId)->first();
-
-        if ($refreshToken === null) {
-            throw new AuthenticationException();
-        }
-        
-        // Solution 2
-        // $refreshTokenId = $event->accessToken->payload->getReferenceTokenId();
-        // $refreshToken = JwtRefreshToken::find($refreshTokenId);
-        //
-        // if ($refreshToken === null) {
-        //     throw new AuthenticationException();
-        // }
-
-        // Solution 3
-        // If you do not want to use a relational database, you can implement token invalidation using two events:
-        // 1. On Logout (JwtLogout Event) – Store the access token in a blacklist for its remaining lifetime using a fast storage solution, such as Redis or MongoDB.
-        // 2. On Token Decoding (JwtAccessTokenDecoded Event) – Check whether the token is in the blacklist before processing it.
-    }
-}
-```
-
 ## Refresh Token Flow
 
 The Refresh Token Flow is a mechanism that allows users to obtain a new access token without re-authenticating.
@@ -307,6 +255,72 @@ curl --location --request POST 'localhost:8000/api/auth/user/logout/all' \
 --header 'Accept: application/json' \
 --header 'Authorization: Bearer YOUR_ACCESS_TOKEN'
 ```
+## Better Security
+
+### Access token invalidation
+
+Since the lifetime of an access token is relatively short (up to one hour, with a default of 15 minutes),
+the package does not invalidate the access token upon logout. Instead, invalidation is only performed
+for the refresh token to avoid additional database query overhead.
+
+It is assumed that the frontend will simply remove the access token from storage upon logout,
+allowing it to expire naturally. However, if token invalidation needs to be enforced on every request,
+this can be implemented using an event-based mechanism.
+
+```php
+php artisan make:listener JwtAccessTokenInvalidation
+```
+
+```php
+<?php
+
+namespace App\Listeners;
+
+use Illuminate\Auth\AuthenticationException;
+use Jekk0\JwtAuth\Events\JwtAccessTokenDecoded;
+use Jekk0\JwtAuth\Model\JwtRefreshToken;
+
+class JwtAccessTokenInvalidation
+{
+
+    public function handle(JwtAccessTokenDecoded $event): void
+    {
+        // Solution 1
+        $accessTokenId = $event->accessToken->payload->getJwtId();
+        $refreshToken = JwtRefreshToken::whereAccessTokenJti($accessTokenId)->first();
+
+        if ($refreshToken === null) {
+            throw new AuthenticationException();
+        }
+        
+        // Solution 2
+        // $refreshTokenId = $event->accessToken->payload->getReferenceTokenId();
+        // $refreshToken = JwtRefreshToken::find($refreshTokenId);
+        //
+        // if ($refreshToken === null) {
+        //     throw new AuthenticationException();
+        // }
+
+        // Solution 3
+        // If you do not want to use a relational database, you can implement token invalidation using two events:
+        // 1. On Logout (JwtLogout Event) – Store the access token in a blacklist for its remaining lifetime using a fast storage solution, such as Redis or MongoDB.
+        // 2. On Token Decoding (JwtAccessTokenDecoded Event) – Check whether the token is in the blacklist before processing it.
+    }
+}
+```
+
+### Refresh token compromised
+
+If a refresh token is reused (i.e., an old token is attempted after a new one has been issued),
+it is a strong indication of a token theft or replay attack. Here’s what to do:
+
+1. Immediately Revoke All Active Tokens
+   - Revoke both the newly issued and previously used refresh tokens.
+   - Invalidate any active access tokens associated with the compromised refresh token.
+2. Notify the User
+   - If a stolen refresh token was used, inform the user about a possible security breach.
+   - Recommend changing their password if suspicious activity is detected.
+
 
 ## Customization
 

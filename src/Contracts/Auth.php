@@ -3,6 +3,7 @@
 namespace Jekk0\JwtAuth\Contracts;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Jekk0\JwtAuth\Model\JwtRefreshToken;
 use Jekk0\JwtAuth\Payload;
 use Jekk0\JwtAuth\Token;
 use Jekk0\JwtAuth\TokenPair;
@@ -25,6 +26,8 @@ interface Auth
     public function retrieveByPayload(Payload $payload): ?Authenticatable;
 
     public function decodeToken(string $token): Token;
+
+    public function getRefreshToken(string $jti): ?JwtRefreshToken;
 
     public function revokeRefreshToken(string $jti): void;
 

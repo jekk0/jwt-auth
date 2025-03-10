@@ -2,6 +2,8 @@
 
 namespace Jekk0\JwtAuth\Contracts;
 
+use Jekk0\JwtAuth\Model\JwtRefreshToken;
+
 interface RefreshTokenRepository
 {
     public function create(
@@ -10,6 +12,8 @@ interface RefreshTokenRepository
         int|string $subject,
         \DateTimeImmutable $expired_at
     ): void;
+
+    public function get(string $jti): ?JwtRefreshToken;
 
     public function delete(string $jti): void;
 

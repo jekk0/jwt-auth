@@ -18,6 +18,11 @@ final class EloquentRefreshTokenRepository implements RefreshTokenRepositoryCont
         );
     }
 
+    public function get(string $jti): ?JwtRefreshToken
+    {
+        return JwtRefreshToken::find($jti);
+    }
+
     public function delete(string $jti): void
     {
         JwtRefreshToken::destroy($jti);
