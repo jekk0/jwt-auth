@@ -33,21 +33,16 @@ You should now have a `./config/jwtauth.php` file that allows you to configure t
  php artisan migrate
 ```
 
-### Generate certificates for sign JWT tokens
-
-This will add the `JWT_AUTH_PUBLIC_KEY`, `JWT_AUTH_PRIVATE_KEY` keys to your app's `.env` file.
-```shell
-php artisan jwtauth:generate-certificates
-```
-
-For better security, you can generate and display the key values for further addition 
-to environment variables in another way.
+### Generate certificates and add configuration to your .env file
 
 ```shell
-php artisan jwtauth:generate-certificates --show
-```
+$ php artisan jwtauth:generate-certificates
 
----
+Copy and paste the content below into your .env file:
+
+JWT_AUTH_PUBLIC_KEY=zvZFv5w3DuY3rZK901cnMM8UmV...
+JWT_AUTH_PRIVATE_KEY=GaD9g0Xk5QHpzIJOIuEbUEOyJXQSpN...
+```
 
 ## Laravel application configuration
 
@@ -181,11 +176,11 @@ Authentication response:
 ```json
 {
     "access": {
-        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.eyJpc3MiOiJDdXN0b21Jc3N1ZXIiLCJzdWIiOjEsImF1ZCI6ImYyYjc1ZjdiMDU5ZDNhNTQiLCJuYmYiOjE3NDE2MDUzNTEsImlhdCI6MTc0MTYwNTM1MSwiZXhwIjoxNzQxNjA2MjUxLCJ0dHAiOiJhY2Nlc3MiLCJqdGkiOiIwMUpOWlc5QzdCVjZTNDc1NDAwQzg0QlpISyIsInJmaSI6IjAxSk5aVzlDN0JWNlM0NzU0MDBDODRCWkhNIiwicm9sZSI6InVzZXIifQ.7y38gsRg5qwRsQBzsPSF90DLWzbTgWc9vbE5f1G1EXUBKL_4iROMmhHgbjJl05MCXCc0JKTWHvDE2iAkJV5rBQ",
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9...",
         "expiredAt": 1741606251
     },
     "refresh": {
-        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.eyJpc3MiOiJDdXN0b21Jc3N1ZXIiLCJzdWIiOjEsImF1ZCI6ImYyYjc1ZjdiMDU5ZDNhNTQiLCJuYmYiOjE3NDE2MDUzNTEsImlhdCI6MTc0MTYwNTM1MSwiZXhwIjoxNzQ0MTk3MzUxLCJ0dHAiOiJyZWZyZXNoIiwianRpIjoiMDFKTlpXOUM3QlY2UzQ3NTQwMEM4NEJaSE0iLCJyZmkiOiIwMUpOWlc5QzdCVjZTNDc1NDAwQzg0QlpISyJ9.Mt5Y5iGZKL8rjF8TU4AbEn_TVeTfTvW3fB7z5nlVXY9HD2QfanOJsQBEtiGYgaRpsH7azdiv8E-7hyo7C03WAA",
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9...",
         "expiredAt": 1744197351
     }
 }
@@ -232,11 +227,11 @@ Refresh Response
 ```json
 {
     "access": {
-        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.eyJpc3MiOiJDdXN0b21Jc3N1ZXIiLCJzdWIiOjEsImF1ZCI6ImYyYjc1ZjdiMDU5ZDNhNTQiLCJuYmYiOjE3NDE2MDUxNDYsImlhdCI6MTc0MTYwNTE0NiwiZXhwIjoxNzQxNjA2MDQ2LCJ0dHAiOiJhY2Nlc3MiLCJqdGkiOiIwMUpOWlczM01DQTE0S0RIREZDSDlSOVpITSIsInJmaSI6IjAxSk5aVzMzTUNBMTRLREhERkNIOVI5WkhOIiwicm9sZSI6InVzZXIifQ.3r-QWdnyy9OGIYiMS4wGhm-aicnvtAEswte10uuA4kXOC4wsp2f94kOC-VdxawEc6SqwZPRKWmrMVuUKGBWHAQ",
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9...",
         "expiredAt": 1741606046
     },
     "refresh": {
-        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.eyJpc3MiOiJDdXN0b21Jc3N1ZXIiLCJzdWIiOjEsImF1ZCI6ImYyYjc1ZjdiMDU5ZDNhNTQiLCJuYmYiOjE3NDE2MDUxNDYsImlhdCI6MTc0MTYwNTE0NiwiZXhwIjoxNzQ0MTk3MTQ2LCJ0dHAiOiJyZWZyZXNoIiwianRpIjoiMDFKTlpXMzNNQ0ExNEtESERGQ0g5UjlaSE4iLCJyZmkiOiIwMUpOWlczM01DQTE0S0RIREZDSDlSOVpITSJ9.t1SWCvJuP7SNpVPAm7p57YH0l8TrZvcgnozQtuVGeMNXBpthJNo3B7O3N3WsI0Pb_Key-zzTP8aQUG3NSbK7AA",
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9...",
         "expiredAt": 1744197146
     }
 }

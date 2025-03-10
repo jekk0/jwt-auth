@@ -19,7 +19,6 @@
     ],
     "require": {
         "php": "^8.0",
-        "ext-json": "*",
         "ext-sodium": "*",
         "firebase/php-jwt": "^6.10",
         "illuminate/console": "^10.0|^11.0|^12.0",
