@@ -1,35 +1,36 @@
-# JWT Auth
+# Laravel JWT Authentication
 
 ## Installation
+
 ```shell
 composer require jekk0/jwt-auth
 ```
-Optionally, install the paragonie/sodium_compat package from composer 
+
+Optionally, install the paragonie/sodium_compat package from composer
 if your php env does not have libsodium installed:
 
 ```shell
 composer require paragonie/sodium_compat
 ```
-
 ## Package configuration
 
 ### Publish package resources
+
 ```shell
 php artisan vendor:publish --provider=Jekk0\JwtAuth\JwtAuthServiceProvider
 ```
-After running this command, resources from the package, such as the configuration file and migrations,
-will be added to your Laravel application.
 
+After running this command, resources from the package, such as the configuration file and migrations, will be added to your Laravel application.
 ### Configure package (optional)
-You should now have a `./config/jwtauth.php` file that allows you to configure the package.
 
+You should now have a `./config/jwtauth.php` file that allows you to configure the package.
 ### Create a new table for manage refresh tokens
+
 Run the migrate command to create the table `jwt_refresh_tokens` needed to store JWT refresh token data
 
 ```shell
 php artisan migrate
 ```
-
 ### Generate certificates and add configuration to your .env file
 
 ```shell
@@ -40,10 +41,10 @@ Copy and paste the content below into your .env file:
 JWT_AUTH_PUBLIC_KEY=zvZFv5w3DuY3rZK901cnMM8UmV...
 JWT_AUTH_PRIVATE_KEY=GaD9g0Xk5QHpzIJOIuEbUEOyJXQSpN...
 ```
-
 ## Laravel application configuration
 
 ### Configure auth guard
+
 Make the following changes to the file:
 
 ```diff
@@ -60,7 +61,6 @@ Make the following changes to the file:
 +        ],
     ]
 ```
-
 ### Create the user auth controller
 
 ```shell
@@ -116,6 +116,7 @@ class UserAuthController
 
 ```
 ### Add auth routes
+
 ```php
 // routes/api.php
 
@@ -133,7 +134,6 @@ Route::group(['prefix' => '/auth/user'], function () {
 });
 
 ```
-
 ### Pruning expired JWT refresh tokens
 
 ```php
@@ -149,7 +149,6 @@ Schedule::command('model:prune', ['--model' => [JwtRefreshToken::class]])->daily
 
 The Refresh Token Flow is a mechanism that allows users to obtain a new access token without re-authenticating.
 It is used to maintain sessions securely while keeping access tokens short-lived.
-
 ### User Authentication
 
 The user logs in with their credentials (e.g., email/password)
@@ -157,7 +156,7 @@ The server verifies the credentials and issues:
 - A short-lived access token (e.g., valid for 15 minutes).
 - A long-lived refresh token (e.g., valid for several days or weeks).
 
-Authentication request:
+**Authentication request:**
 ```shell
 curl --location 'localhost:8000/api/auth/user/login' \
 --header 'Accept: application/json' \
@@ -168,7 +167,7 @@ curl --location 'localhost:8000/api/auth/user/login' \
 }'
 ```
 
-Authentication response:
+**Authentication response:**
 ```json
 {
     "access": {
@@ -188,28 +187,26 @@ short-lived to enhance security.
 
 A **refresh token** is used to obtain a new access token without requiring the user to log in again.
 It is long-lived and helps maintain user sessions securely while minimizing exposure of credentials.
-
 ### Accessing Protected Resources
 
 - The client includes the access token in the Authorization header (Bearer <access_token>) to make authenticated API requests.
 - The server validates the token and grants access.
 
-User profile request:
+**User profile request:**
 ```shell
 curl --location 'localhost:8000/api/auth/user/profile' \
 --header 'Accept: application/json' \
 --header 'Authorization: Bearer YOUR_ACCESS_TOKEN'
 ```
-
 ### Token Expiration & Refresh Request
 
 - When the access token expires, the client sends a request to the token refresh endpoint.
 - The request includes the refresh token.
-- The server verifies the refresh token (e.g., checks its validity and ensures it is not revoked). 
+- The server verifies the refresh token (e.g., checks its validity and ensures it is not revoked).
 - If valid, the server issues a new access token and refresh token.
 - The client replaces the expired access token and refresh token with new ones.
 
-Refresh Request:
+**Refresh request:**
 ```shell
 curl --location 'localhost:8000/api/auth/user/refresh' \
 --header 'Accept: application/json' \
@@ -219,7 +216,7 @@ curl --location 'localhost:8000/api/auth/user/refresh' \
 }'
 ```
 
-Refresh Response
+**Refresh response**:
 ```json
 {
     "access": {
@@ -232,37 +229,34 @@ Refresh Response
     }
 }
 ```
-
 ### Logout or Token Revocation
 
 - If the user logs out, the refresh token will be revoked (removed from a database).
-- If a refresh token is compromised, the user must re-authenticate.
+- If a refresh token is compromised, see [Refresh token compromised](#refresh-token-compromised)
 
-Logout request:
+**Logout request:**
 ```shell
 curl --location --request POST 'localhost:8000/api/auth/user/logout' \
 --header 'Accept: application/json' \
 --header 'Authorization: Bearer YOUR_ACCESS_TOKEN'
 ```
 
-Logout from all devices request:
+**Logout from all devices request:**
 ```shell
 curl --location --request POST 'localhost:8000/api/auth/user/logout/all' \
 --header 'Accept: application/json' \
 --header 'Authorization: Bearer YOUR_ACCESS_TOKEN'
 ```
-## Better Security
+## Security
 
 ### Access token invalidation
 
-Since the lifetime of an access token is relatively short (up to one hour, with a default of 15 minutes),
-the package does not invalidate the access token upon logout. Instead, invalidation is only performed
-for the refresh token to avoid additional database query overhead.
+Since the lifetime of an access token is relatively short (up to one hour, with a default of 15 minutes), the package does not invalidate the access token upon logout. Instead, invalidation is only performed for the refresh token to avoid additional database query overhead.
 
 It is assumed that the frontend will simply remove the access token from storage upon logout,
-allowing it to expire naturally. However, if token invalidation needs to be enforced on every request,
-this can be implemented using an event-based mechanism.
+allowing it to expire naturally. However, if token invalidation needs to be enforced on every request, this can be implemented using an event-based mechanism.
 
+**Make event listener:**
 ```php
 php artisan make:listener AccessTokenInvalidation
 ```
@@ -304,20 +298,18 @@ class AccessTokenInvalidation
     }
 }
 ```
-
 ### Refresh token compromised
 
-If a refresh token is reused (i.e., an old token is attempted after a new one has been issued),
-it is a strong indication of a token theft or replay attack. Here’s what to do:
+If a refresh token is reused (i.e., an old token is attempted after a new one has been issued), it is a strong indication of a token theft or replay attack. Here’s what to do:
 
 1. Immediately Revoke All Active Tokens
-   - Revoke both the newly issued and previously used refresh tokens.
-   - Invalidate any active access tokens associated with the compromised refresh token.
+    - Revoke both the newly issued and previously used refresh tokens.
+    - Invalidate any active access tokens associated with the compromised refresh token.
 2. Notify the User
-   - If a stolen refresh token was used, inform the user about a possible security breach.
-   - Recommend changing their password if suspicious activity is detected.
+    - If a stolen refresh token was used, inform the user about a possible security breach.
+    - Recommend changing their password if suspicious activity is detected.
 
-Make event listener: 
+**Make event listener:**
 ```php
 php artisan make:listener RefreshTokenCompromised
 ```
@@ -360,7 +352,6 @@ class RefreshTokenCompromised
 }
 
 ```
-
 ## Customization
 
 ### Customize JWT token payload
@@ -398,8 +389,7 @@ $name = auth('jwt-user')->getAccessToken()->payload['name']
 
 ### Customize JWT extractor
 
-By implementing a custom extractor (default `Authorization: Bearer`), you can retrieve the JWT token from alternative locations 
-such as request headers, query parameters or even custom request attributes.
+By implementing a custom extractor (default `Authorization: Bearer`), you can retrieve the JWT token from alternative locations such as request headers, query parameters or even custom request attributes.
 
 ```shell
 php artisan make:provider CustomJwtTokenExtractor
@@ -436,7 +426,6 @@ class CustomJwtTokenExtractor extends ServiceProvider
     }
 }
 ```
-
 ### Customize JWT token issuer
 
 By default, the JWT token issuer is taken from the request URL.
@@ -478,12 +467,11 @@ class CustomJwtTokenIssuer extends ServiceProvider
 }
 
 ```
-
 ### Customize leeway
 
 If there is a need to generate JWT tokens while taking leeway into account, you can achieve this
 by replacing the default `Jekk0\JwtAuth\Contracts\Clock` binding.
-This allows you to customize how timestamps, expiration times, or issued-at claims (iat, exp, nbf) 
+This allows you to customize how timestamps, expiration times, or issued-at claims (iat, exp, nbf)
 are handled within the token.
 
 ```shell
@@ -521,8 +509,7 @@ class CustomJwtTokenIssuer extends ServiceProvider
 }
 
 ```
-
-### Available events
+### Available events:
 
 1. Jekk0\JwtAuth\Events\JwtAccessTokenDecoded
 2. Jekk0\JwtAuth\Events\JwtAttempting
@@ -535,10 +522,9 @@ class CustomJwtTokenIssuer extends ServiceProvider
 9. Jekk0\JwtAuth\Events\JwtRefreshTokenDecoded
 10. Jekk0\JwtAuth\Events\JwtTokensRefreshed
 11. Jekk0\JwtAuth\Events\JwtValidated
-
 ## Functionally testing a JWT protected api
 
-Login with Laravel's default `actingAs` method
+**Login with Laravel's default `actingAs` method:**
 
 ```php
 public function test_authenticate_in_tests(): void
@@ -553,7 +539,7 @@ public function test_authenticate_in_tests(): void
 }
 ```
 
-Login with JWT guard
+**Login with JWT guard:**
 
 ```php
 public function test_logout(): void
@@ -566,7 +552,7 @@ public function test_logout(): void
 }
 ```
 
-Manually generate a JWT token for end-to-end testing:
+**Manually generate a JWT token for end-to-end testing:**
 
 ```php
 public function test_authenticate(): void
