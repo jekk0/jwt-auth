@@ -2,9 +2,9 @@
 
 namespace Jekk0\JwtAuth;
 
-enum RefreshTokenStatus: string
+enum RefreshTokenStatus: int
 {
-    case Active = 'ACTIVE';
-    case Used = 'USED';
-    case Compromised = 'COMPROMISED';
+    case Active = 0;
+    case Used = 1;
+    case Compromised = 2;
 }

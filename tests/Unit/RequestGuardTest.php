@@ -337,7 +337,7 @@ class RequestGuardTest extends TestCase
         $expectedEvent1 = new JwtRefreshTokenDecoded($guardName, $refreshToken);
         $expectedEvent2 = new JwtLogin($guardName, $user);
         $expectedEvent3 = new JwtAuthenticated($guardName, $user, $tokenPair->access);
-        $expectedEvent4 = new JwtTokensRefreshed($guardName, $user, $tokenPair);
+        $expectedEvent4 = new JwtTokensRefreshed($guardName, $user, $tokenPair, $refreshToken);
 
         $dispatcher = $this->createMock(Dispatcher::class);
         $dispatcher->expects($matcher = $this->exactly(4))->method('dispatch')->willReturnCallback(
