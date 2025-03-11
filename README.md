@@ -1,5 +1,10 @@
 # Laravel JWT Authentication
 
+![Build Status](https://github.com/jekk0/jwt-auth/actions/workflows/pipeline.yml/badge.svg?branch=main)
+[![Coverage Status](https://codecov.io/gh/jekk0/jwt-auth/branch/main/graphs/badge.svg)](https://codecov.io/gh/jekk0/jwt-auth)
+[![Latest Stable Version](https://poser.pugx.org/jekk0/jwt-auth/v/stable)](https://packagist.org/packages/jekk0/jwt-auth)
+[![Total Downloads](https://poser.pugx.org/jekk0/jwt-auth/downloads)](https://packagist.org/packages/jekk0/jwt-auth)
+
 ## Installation
 
 ```shell
