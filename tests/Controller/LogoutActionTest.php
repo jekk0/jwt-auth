@@ -57,8 +57,7 @@ class LogoutActionTest extends TestCase
         self::assertSame(200, $response->getStatusCode());
         self::assertSame(['message' => 'Successfully logged out'], $response->json());
 
-        $this->assertDatabaseCount(JwtRefreshToken::class, 1);
-        self::assertSame(RefreshTokenStatus::Revoked, JwtRefreshToken::find($refreshToken->payload->getJwtId())->status);
+        $this->assertDatabaseCount(JwtRefreshToken::class, 0);
     }
 
     public function test_logout_by_without_token(): void
@@ -126,10 +125,6 @@ TOKEN;
         self::assertSame(200, $response->getStatusCode());
         self::assertSame(['message' => 'Successfully logged out from all devices'], $response->json());
 
-        $this->assertDatabaseCount(JwtRefreshToken::class, 3);
-        $tokens = JwtRefreshToken::all();
-        self::assertSame(RefreshTokenStatus::Revoked, $tokens->get(0)->status);
-        self::assertSame(RefreshTokenStatus::Revoked, $tokens->get(1)->status);
-        self::assertSame(RefreshTokenStatus::Revoked, $tokens->get(2)->status);
+        $this->assertDatabaseCount(JwtRefreshToken::class, 0);
     }
 }

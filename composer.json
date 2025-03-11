@@ -7,8 +7,9 @@
         "json web token",
         "auth",
         "authentication",
-        "access token",
-        "refresh token"
+        "access",
+        "refresh",
+        "token"
     ],
     "homepage": "https://github.com/jekk0/jwt-auth",
     "license": "MIT",

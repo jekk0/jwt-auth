@@ -1,10 +1,5 @@
 # JWT Auth
 
-![Build Status](https://github.com/jekk0/laravel-iso3166-validation-rules/actions/workflows/pipeline.yml/badge.svg?branch=master)
-[![Coverage Status](https://codecov.io/gh/jekk0/laravel-iso3166-validation-rules/branch/master/graphs/badge.svg)](https://codecov.io/gh/jekk0/laravel-iso3166-validation-rules)
-[![Latest Stable Version](https://poser.pugx.org/jekk0/laravel-iso3166-validation-rules/v/stable)](https://packagist.org/packages/jekk0/laravel-iso3166-validation-rules)
-[![Total Downloads](https://poser.pugx.org/jekk0/laravel-iso3166-validation-rules/downloads)](https://packagist.org/packages/jekk0/laravel-iso3166-validation-rules)
-
 ## Installation
 ```shell
 composer require jekk0/jwt-auth
@@ -28,9 +23,11 @@ will be added to your Laravel application.
 ### Configure package (optional)
 You should now have a `./config/jwtauth.php` file that allows you to configure the package.
 
-### Add new tables for manage refresh tokens
+### Create a new table for manage refresh tokens
+Run the migrate command to create the table `jwt_refresh_tokens` needed to store JWT refresh token data
+
 ```shell
- php artisan migrate
+php artisan migrate
 ```
 
 ### Generate certificates and add configuration to your .env file
@@ -69,7 +66,6 @@ Make the following changes to the file:
 ```shell
 php artisan make:controller UserAuthController
 ```
-### Add auth methods
 
 ```php
 // app/Http/Controllers/UserAuthController.php
@@ -207,7 +203,7 @@ curl --location 'localhost:8000/api/auth/user/profile' \
 
 ### Token Expiration & Refresh Request
 
-- When the access token expires, the client sends a request to the token refresh endpoint (/refresh).
+- When the access token expires, the client sends a request to the token refresh endpoint.
 - The request includes the refresh token.
 - The server verifies the refresh token (e.g., checks its validity and ensures it is not revoked). 
 - If valid, the server issues a new access token and refresh token.
@@ -239,7 +235,7 @@ Refresh Response
 
 ### Logout or Token Revocation
 
-- If the user logs out, the refresh token should be revoked (e.g., removed from a database or a blacklist).
+- If the user logs out, the refresh token will be revoked (removed from a database).
 - If a refresh token is compromised, the user must re-authenticate.
 
 Logout request:

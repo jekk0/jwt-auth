@@ -154,8 +154,7 @@ class AuthTest extends TestCase
 
         $this->auth->revokeRefreshToken($jti);
 
-        $this->assertDatabaseCount(JwtRefreshToken::class, 1);
-        self::assertSame(RefreshTokenStatus::Revoked, JwtRefreshToken::find($jti)->status);
+        $this->assertDatabaseCount(JwtRefreshToken::class, 0);
     }
 
     public function test_revoke_all_refresh_tokens(): void
@@ -175,9 +174,7 @@ class AuthTest extends TestCase
 
         $this->auth->revokeAllRefreshTokens($user);
 
-        $this->assertDatabaseCount(JwtRefreshToken::class, 3);
-        self::assertSame(RefreshTokenStatus::Revoked, JwtRefreshToken::find($jti1)->status);
-        self::assertSame(RefreshTokenStatus::Revoked, JwtRefreshToken::find($jti2)->status);
+        $this->assertDatabaseCount(JwtRefreshToken::class, 1);
         self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find($jti3)->status);
     }
 

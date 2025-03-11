@@ -508,7 +508,6 @@ class RequestGuardTest extends TestCase
     public static function data_for_refresh_tokens_token_invalid_status(): \Generator
     {
         yield from [
-            'Revoked Token' => [new JwtRefreshToken(['status' => RefreshTokenStatus::Revoked])],
             'Compromised Token' => [new JwtRefreshToken(['status' => RefreshTokenStatus::Compromised])]
         ];
     }

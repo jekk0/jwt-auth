@@ -29,16 +29,14 @@ final class EloquentRefreshTokenRepository implements RefreshTokenRepositoryCont
         return JwtRefreshToken::find($jti);
     }
 
-    public function markAsRevoked(string $jti): void
+    public function delete(string $jti): void
     {
-        $refreshToken = $this->get($jti);
-        $refreshToken->status = RefreshTokenStatus::Revoked;
-        $refreshToken->save();
+        JwtRefreshToken::destroy($jti);
     }
 
-    public function markAsRevokedAllBySubject(string $subject): void
+    public function deleteAllBySubject(string $subject): void
     {
-        JwtRefreshToken::where('sub', $subject)->update(['status' => RefreshTokenStatus::Revoked]);
+        JwtRefreshToken::where('sub', $subject)->delete();
     }
 
     public function markAsUsed(string $jti): void

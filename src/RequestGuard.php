@@ -122,7 +122,7 @@ final class RequestGuard implements JwtGuardContract
 
             $model = $this->jwtAuth->getRefreshToken($token->payload->getJwtId());
 
-            if ($model == null || $model->status == RefreshTokenStatus::Revoked || $model->status == RefreshTokenStatus::Compromised) {
+            if ($model == null || $model->status == RefreshTokenStatus::Compromised) {
                 throw new InvalidRefreshToken();
             }
 

@@ -63,7 +63,7 @@ class EloquentRefreshTokenRepositoryTest extends TestCase
         self::assertNull($refreshToken);
     }
 
-    public function test_mark_as_revoked(): void
+    public function test_delete(): void
     {
         $jti = '01JNV3HSGK8TSR3TFAYN2VBQ6F';
         $accessTokenJti = '01JNV3HSGKSWAQFYVN56G84AC3';
@@ -76,13 +76,12 @@ class EloquentRefreshTokenRepositoryTest extends TestCase
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
         self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find($jti)->status);
 
-        (new EloquentRefreshTokenRepository())->markAsRevoked($jti);
+        (new EloquentRefreshTokenRepository())->delete($jti);
 
-        $this->assertDatabaseCount(JwtRefreshToken::class, 1);
-        self::assertSame(RefreshTokenStatus::Revoked, JwtRefreshToken::find($jti)->status);
+        $this->assertDatabaseCount(JwtRefreshToken::class, 0);
     }
 
-    public function test_mark_as_revoked_all_by_subject(): void
+    public function test_delete_all_by_subject(): void
     {
         $subject = 'subject';
         $expiredAt = new \DateTimeImmutable();
@@ -116,11 +115,9 @@ class EloquentRefreshTokenRepositoryTest extends TestCase
         self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find($jti2)->status);
         self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find($jti3)->status);
 
-        (new EloquentRefreshTokenRepository())->markAsRevokedAllBySubject($subject);
+        (new EloquentRefreshTokenRepository())->deleteAllBySubject($subject);
 
-        $this->assertDatabaseCount(JwtRefreshToken::class, 3);
-        self::assertSame(RefreshTokenStatus::Revoked, JwtRefreshToken::find($jti1)->status);
-        self::assertSame(RefreshTokenStatus::Revoked, JwtRefreshToken::find($jti2)->status);
+        $this->assertDatabaseCount(JwtRefreshToken::class, 1);
         self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find($jti3)->status);
     }
 

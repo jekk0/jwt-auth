@@ -71,6 +71,6 @@ return [
         | Default: 30 days
         |
         */
-        'refresh' => env('JWT_AUTH_REFRESH_TOKEN_TTL', 2592000),
+        'refresh' => env('JWT_AUTH_REFRESH_TOKEN_TTL', 604800),
     ],
 ];

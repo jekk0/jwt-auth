@@ -67,12 +67,12 @@ final class Auth implements JwtAuthContract
     // todo chenge arg
     public function revokeRefreshToken(string $jti): void
     {
-        $this->refreshTokenRepository->markAsRevoked($jti);
+        $this->refreshTokenRepository->delete($jti);
     }
 
     public function revokeAllRefreshTokens(Authenticatable $user): void
     {
-        $this->refreshTokenRepository->markAsRevokedAllBySubject($user->getAuthIdentifier());
+        $this->refreshTokenRepository->deleteAllBySubject($user->getAuthIdentifier());
     }
 
     // todo test
