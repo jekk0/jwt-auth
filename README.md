@@ -56,16 +56,18 @@ Make the following changes to the file:
 // file /config/auth.php
 
     'guards' => [
-         'web' => [
-             'driver' => 'session',
-             'provider' => 'users',
-         ],
+-        'web' => [
+-            'driver' => 'session',
+-            'provider' => 'users',
+-        ],
 +        'jwt-user' => [
 +            'driver' => 'jwt',
 +            'provider' => 'users',
 +        ],
     ]
 ```
+**A JWT user can be any model that implements the native laravel interface \Illuminate\Contracts\Auth\Authenticatable**
+
 ### Create the user auth controller
 
 ```shell
@@ -87,7 +89,12 @@ class UserAuthController
     {
         $credentials = $request->only('email', 'password');
 
-        $tokens = auth('jwt-user')->attempt($credentials);
+//        $tokens = auth('jwt-user')->attempt($credentials);
+//        if (is_null($tokens)) {
+//            throw new AuthenticationException();
+//        }
+
+        $tokens = auth('jwt-user')->attemptOrFail($credentials);
 
         return new JsonResponse($tokens->toArray());
     }
