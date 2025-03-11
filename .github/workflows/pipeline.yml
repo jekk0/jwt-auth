@@ -38,30 +38,16 @@ jobs:
           composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts=^${{ matrix.laravel }}"
 
       - name: Execute tests
-        run: vendor/bin/phpunit
+        run: vendor/bin/phpunit --coverage-clover ./coverage.xml
 
-#      - name: PHPUnit Tests
-#        uses: php-actions/phpunit@v4
-#        env:
-#          XDEBUG_MODE: coverage
-#        with:
-##          version: 11
-#          php-version: ${{ matrix.php }}
-#          php_extensions: "xdebug"
-#          configuration: phpunit.xml.dist
-#          args: tests --coverage-clover ./coverage.xml
-
-#      - name: PHPStan
-#        run: vendor/bin/phpstan analyse
-
-#      - name: Upload to Codecov
-#        uses: codecov/codecov-action@v4
-#        with:
-#          token: ${{ secrets.CODECOV_TOKEN }}
-#          fail_ci_if_error: true
-#          files: ./coverage.xml
-#          verbose: true
-#          flags: unittests
-#          name: P${{ matrix.php }}-L${{ matrix.laravel }}-${{ matrix.dependency-version }}-${{ matrix.os }}-${{ github.sha }}
-#        env:
-#          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          files: ./coverage.xml
+          verbose: true
+          flags: unittests
+          name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
