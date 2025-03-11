@@ -54,7 +54,7 @@ return [
         |
         | This defines how long an access token remains valid before expiration.
         | Typically, access tokens have a short lifespan (e.g., 15 minutes to 1 hour) to enhance security.
-        | Default: 1 hour
+        | Default: one hour
         |
         */
         'access' => env('JWT_AUTH_ACCESS_TOKEN_TTL', 3600),
@@ -68,9 +68,9 @@ return [
         |
         | A refresh token is used to obtain a new access token without requiring the user to reauthenticate.
         | Refresh tokens generally have a longer lifespan (e.g., days or weeks).
-        | Default: 30 days
+        | Default: seven days
         |
         */
-        'refresh' => env('JWT_AUTH_REFRESH_TOKEN_TTL', 2592000),
+        'refresh' => env('JWT_AUTH_REFRESH_TOKEN_TTL', 604800),
     ],
 ];

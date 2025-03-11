@@ -13,12 +13,13 @@ return new class extends Migration
             $table->char('access_token_jti', 26)->index();
             $table->string('sub', 36);
             $table->timestamp('expired_at');
+            $table->unsignedTinyInteger('status');
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('jwt_auth_tokens');
+        Schema::dropIfExists('jwt_refresh_tokens');
     }
 };

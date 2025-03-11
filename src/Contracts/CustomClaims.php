@@ -2,7 +2,7 @@
 
 namespace Jekk0\JwtAuth\Contracts;
 
-interface JwtCustomClaims
+interface CustomClaims
 {
     /**
      * @return array<non-empty-string, mixed>

@@ -36,4 +36,6 @@ interface RequestGuard extends Guard
     public function getAccessToken(): ?Token;
 
     public function setRequest(Request $request): void;
+
+    public function setToken(Token $accessToken): void;
 }

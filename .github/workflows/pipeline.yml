@@ -52,9 +52,7 @@ jobs:
 #          args: tests --coverage-clover ./coverage.xml
 
 #      - name: PHPStan
-#      - uses: php-actions/phpstan@v3
-#        with:
-#          path: src/
+#        run: vendor/bin/phpstan analyse
 
 #      - name: Upload to Codecov
 #        uses: codecov/codecov-action@v4

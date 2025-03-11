@@ -5,7 +5,8 @@ namespace Jekk0\JwtAuth\Tests\Unit;
 use Illuminate\Auth\EloquentUserProvider;
 use Jekk0\JwtAuth\Contracts\RefreshTokenRepository;
 use Jekk0\JwtAuth\Contracts\TokenManager as TokenManagerContract;
-use Jekk0\JwtAuth\JwtAuth;
+use Jekk0\JwtAuth\Auth;
+use Jekk0\JwtAuth\Model\JwtRefreshToken;
 use Jekk0\JwtAuth\Payload;
 use Jekk0\JwtAuth\Token;
 use Jekk0\JwtAuth\TokenManager;
@@ -14,7 +15,7 @@ use Lcobucci\Clock\SystemClock;
 use PHPUnit\Framework\TestCase;
 use Workbench\App\Models\User;
 
-class JwtAuthTest extends TestCase
+class AuthTest extends TestCase
 {
     public function test_create_token_pair(): void
     {
@@ -31,7 +32,7 @@ class JwtAuthTest extends TestCase
         $refreshTokenRepository = $this->createMock(RefreshTokenRepository::class);
         $refreshTokenRepository->expects($this->once())->method('create');
 
-        $auth = new JwtAuth($tokenManager, $userProvider, $refreshTokenRepository);
+        $auth = new Auth($tokenManager, $userProvider, $refreshTokenRepository);
         $result = $auth->createTokenPair($user);
 
         self::assertSame($tokenPair, $result);
@@ -49,7 +50,7 @@ class JwtAuthTest extends TestCase
         $tokenManager = $this->createMock(TokenManagerContract::class);
         $refreshTokenRepository = $this->createMock(RefreshTokenRepository::class);
 
-        $auth = new JwtAuth($tokenManager, $userProvider, $refreshTokenRepository);
+        $auth = new Auth($tokenManager, $userProvider, $refreshTokenRepository);
         $result = $auth->retrieveByCredentials($credentials);
 
         self::assertSame($expected, $result);
@@ -68,7 +69,7 @@ class JwtAuthTest extends TestCase
         $tokenManager = $this->createMock(TokenManagerContract::class);
         $refreshTokenRepository = $this->createMock(RefreshTokenRepository::class);
 
-        $auth = new JwtAuth($tokenManager, $userProvider, $refreshTokenRepository);
+        $auth = new Auth($tokenManager, $userProvider, $refreshTokenRepository);
         $result = $auth->retrieveByCredentials($credentials);
 
         $this->assertNull($result);
@@ -87,7 +88,7 @@ class JwtAuthTest extends TestCase
         $tokenManager = $this->createMock(TokenManagerContract::class);
         $refreshTokenRepository = $this->createMock(RefreshTokenRepository::class);
 
-        $auth = new JwtAuth($tokenManager, $userProvider, $refreshTokenRepository);
+        $auth = new Auth($tokenManager, $userProvider, $refreshTokenRepository);
         $result = $auth->hasValidCredentials($user, $credentials);
 
         self::assertTrue($result);
@@ -106,7 +107,7 @@ class JwtAuthTest extends TestCase
         $tokenManager = $this->createMock(TokenManagerContract::class);
         $refreshTokenRepository = $this->createMock(RefreshTokenRepository::class);
 
-        $auth = new JwtAuth($tokenManager, $userProvider, $refreshTokenRepository);
+        $auth = new Auth($tokenManager, $userProvider, $refreshTokenRepository);
         $result = $auth->hasValidCredentials($user, $credentials);
 
         self::assertFalse($result);
@@ -144,7 +145,7 @@ class JwtAuthTest extends TestCase
         $userProvider->method('retrieveById')->with($userId)->willReturn($user);
         $refreshTokenRepository = $this->createMock(RefreshTokenRepository::class);
 
-        $auth = new JwtAuth($tokenManager, $userProvider, $refreshTokenRepository);
+        $auth = new Auth($tokenManager, $userProvider, $refreshTokenRepository);
 
         self::assertSame($user, $auth->retrieveByPayload($payload));
     }
@@ -179,7 +180,7 @@ class JwtAuthTest extends TestCase
         $userProvider = $this->createMock(EloquentUserProvider::class);
         $refreshTokenRepository = $this->createMock(RefreshTokenRepository::class);
 
-        $auth = new JwtAuth($tokenManager, $userProvider, $refreshTokenRepository);
+        $auth = new Auth($tokenManager, $userProvider, $refreshTokenRepository);
         $userProvider->method('retrieveById')
             ->with($userId)
             ->willReturn(null);
@@ -201,10 +202,26 @@ class JwtAuthTest extends TestCase
             ->with($token)->willReturn($accessToken);
         $refreshTokenRepository = $this->createMock(RefreshTokenRepository::class);
 
-        $auth = new JwtAuth($tokenManager, $userProvider, $refreshTokenRepository);
+        $auth = new Auth($tokenManager, $userProvider, $refreshTokenRepository);
         $result = $auth->decodeToken($token);
 
         self::assertSame($accessToken, $result);
+    }
+
+    public function test_get_refresh_token(): void
+    {
+        $token = '1234-4567';
+
+        $userProvider = $this->createMock(EloquentUserProvider::class);
+        $tokenManager = $this->createMock(TokenManagerContract::class);
+        $refreshTokenRepository = $this->createMock(RefreshTokenRepository::class);
+        $refreshTokenRepository->expects($this->once())->method('get')->with($token)
+            ->willReturn($expected = new JwtRefreshToken());
+
+        $auth = new Auth($tokenManager, $userProvider, $refreshTokenRepository);
+        $result = $auth->getRefreshToken($token);
+
+        self::assertSame($expected, $result);
     }
 
     public function test_revoke_refresh_token(): void
@@ -215,7 +232,7 @@ class JwtAuthTest extends TestCase
         $refreshTokenRepository = $this->createMock(RefreshTokenRepository::class);
         $refreshTokenRepository->expects($this->once())->method('delete')->with($jti);
 
-        $auth = new JwtAuth($tokenManager, $userProvider, $refreshTokenRepository);
+        $auth = new Auth($tokenManager, $userProvider, $refreshTokenRepository);
 
         $auth->revokeRefreshToken($jti);
     }
@@ -231,7 +248,7 @@ class JwtAuthTest extends TestCase
         $refreshTokenRepository = $this->createMock(RefreshTokenRepository::class);
         $refreshTokenRepository->expects($this->once())->method('deleteAllBySubject')->with($subject);
 
-        $auth = new JwtAuth($tokenManager, $userProvider, $refreshTokenRepository);
+        $auth = new Auth($tokenManager, $userProvider, $refreshTokenRepository);
 
         $auth->revokeAllRefreshTokens($user);
     }

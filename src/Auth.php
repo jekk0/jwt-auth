@@ -3,12 +3,13 @@
 namespace Jekk0\JwtAuth;
 
 use Illuminate\Contracts\Auth\UserProvider;
-use Jekk0\JwtAuth\Contracts\JwtAuth as JwtAuthContract;
+use Jekk0\JwtAuth\Contracts\Auth as JwtAuthContract;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Jekk0\JwtAuth\Contracts\RefreshTokenRepository;
 use Jekk0\JwtAuth\Contracts\TokenManager;
+use Jekk0\JwtAuth\Model\JwtRefreshToken;
 
-final class JwtAuth implements JwtAuthContract
+final class Auth implements JwtAuthContract
 {
     public function __construct(
         private readonly TokenManager $tokenManager,
@@ -52,11 +53,18 @@ final class JwtAuth implements JwtAuthContract
         return null;
     }
 
+    // todo chenge arg
+    public function getRefreshToken(string $jti): ?JwtRefreshToken
+    {
+        return $this->refreshTokenRepository->get($jti);
+    }
+
     public function decodeToken(string $token): Token
     {
         return $this->tokenManager->decode($token);
     }
 
+    // todo chenge arg
     public function revokeRefreshToken(string $jti): void
     {
         $this->refreshTokenRepository->delete($jti);
@@ -65,5 +73,19 @@ final class JwtAuth implements JwtAuthContract
     public function revokeAllRefreshTokens(Authenticatable $user): void
     {
         $this->refreshTokenRepository->deleteAllBySubject($user->getAuthIdentifier());
+    }
+
+    // todo test
+    // todo chenge arg
+    public function markAsUsed(string $jti): void
+    {
+        $this->refreshTokenRepository->markAsUsed($jti);
+    }
+
+    // todo chenge arg
+    // todo test
+    public function markAsCompromised(string $jti): void
+    {
+        $this->refreshTokenRepository->markAsCompromised($jti);
     }
 }

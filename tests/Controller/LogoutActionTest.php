@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\JsonResponse;
 use Jekk0\JwtAuth\Contracts\TokenManager;
 use Jekk0\JwtAuth\Model\JwtRefreshToken;
+use Jekk0\JwtAuth\RefreshTokenStatus;
 use Orchestra\Testbench\Concerns\WithWorkbench;
 use Orchestra\Testbench\TestCase;
 use Workbench\App\Models\User;
@@ -20,8 +21,8 @@ class LogoutActionTest extends TestCase
     {
         $app['config']->set([
             'app.key' => 'D61EMLTbWd/1wRN5LeYq5G94jBcEVF/x1xeIOgjoWNc=',
-            'auth.guards.user.driver' => 'jwt',
-            'auth.guards.user.provider' => 'users',
+            'auth.guards.jwt-user.driver' => 'jwt',
+            'auth.guards.jwt-user.provider' => 'users',
             'auth.providers.users.model' => User::class,
             'database.default' => 'testing',
             'jwtauth.public_key' => 'iVUKxPqZFLMD/MLONKvXMA47Yk4uUqzSgHAHSEiBRjQ=',
@@ -32,29 +33,26 @@ class LogoutActionTest extends TestCase
     protected function defineRoutes($router)
     {
         $router->post('api/logout', function () {
-            auth('user')->logout();
+            auth('jwt-user')->logout();
             return new JsonResponse(['message' => 'Successfully logged out']);
-        })->middleware('auth:user');
+        })->middleware('auth:jwt-user');
 
         $router->post('api/logout/all', function () {
-            auth('user')->logoutFromAllDevices();
+            auth('jwt-user')->logoutFromAllDevices();
             return new JsonResponse(['message' => 'Successfully logged out from all devices']);
-        })->middleware('auth:user');
+        })->middleware('auth:jwt-user');
     }
 
     public function test_logout(): void
     {
         $user = UserFactory::new()->create();
 
-        $accessToken = auth('user')->login($user)->access;
+        $refreshToken = auth('jwt-user')->login($user)->refresh;
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
+        self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find($refreshToken->payload->getJwtId())->status);
 
-        $response = $this->postJson(
-            '/api/logout',
-            ['origin' => config('app.url')],
-            ['Authorization' => 'Bearer ' . $accessToken->token]
-        );
+        $response = $this->postJson('/api/logout', ['origin' => config('app.url')], );
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame(['message' => 'Successfully logged out'], $response->json());
@@ -110,19 +108,19 @@ TOKEN;
     {
         $user = UserFactory::new()->create();
         // Create first session
-        auth('user')->login($user);
+        auth('jwt-user')->login($user);
         // Create second session
-        auth('user')->login($user);
+        auth('jwt-user')->login($user);
         // Create third session
-        $accessToken = auth('user')->login($user)->access;
+        auth('jwt-user')->login($user);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 3);
+        $tokens = JwtRefreshToken::all();
+        self::assertSame(RefreshTokenStatus::Active, $tokens->get(0)->status);
+        self::assertSame(RefreshTokenStatus::Active, $tokens->get(1)->status);
+        self::assertSame(RefreshTokenStatus::Active, $tokens->get(2)->status);
 
-        $response = $this->postJson(
-            '/api/logout/all',
-            ['origin' => config('app.url')],
-            ['Authorization' => 'Bearer ' . $accessToken->token]
-        );
+        $response = $this->postJson('/api/logout/all', ['origin' => config('app.url')]);
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame(['message' => 'Successfully logged out from all devices'], $response->json());

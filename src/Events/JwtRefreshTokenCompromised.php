@@ -6,14 +6,14 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Queue\SerializesModels;
 use Jekk0\JwtAuth\Token;
 
-class JwtAuthenticated
+class JwtRefreshTokenCompromised
 {
     use SerializesModels;
 
     public function __construct(
         public readonly string $guard,
         public readonly Authenticatable $user,
-        public readonly ?Token $accessToken
+        public readonly Token $refreshToken
     ) {
     }
 }

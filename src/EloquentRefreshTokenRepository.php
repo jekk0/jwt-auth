@@ -14,8 +14,19 @@ final class EloquentRefreshTokenRepository implements RefreshTokenRepositoryCont
         \DateTimeImmutable $expired_at
     ): void {
         JwtRefreshToken::create(
-            ['jti' => $jti, 'access_token_jti' => $accessTokenJti, 'sub' => $subject, 'expired_at' => $expired_at]
+            [
+                'jti' => $jti,
+                'access_token_jti' => $accessTokenJti,
+                'sub' => $subject,
+                'expired_at' => $expired_at,
+                'status' => RefreshTokenStatus::Active
+            ]
         );
+    }
+
+    public function get(string $jti): ?JwtRefreshToken
+    {
+        return JwtRefreshToken::find($jti);
     }
 
     public function delete(string $jti): void
@@ -26,5 +37,19 @@ final class EloquentRefreshTokenRepository implements RefreshTokenRepositoryCont
     public function deleteAllBySubject(string $subject): void
     {
         JwtRefreshToken::where('sub', $subject)->delete();
+    }
+
+    public function markAsUsed(string $jti): void
+    {
+        $refreshToken = $this->get($jti);
+        $refreshToken->status = RefreshTokenStatus::Used;
+        $refreshToken->save();
+    }
+
+    public function markAsCompromised(string $jti): void
+    {
+        $refreshToken = $this->get($jti);
+        $refreshToken->status = RefreshTokenStatus::Compromised;
+        $refreshToken->save();
     }
 }

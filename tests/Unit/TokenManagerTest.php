@@ -3,7 +3,8 @@
 namespace Jekk0\JwtAuth\Tests\Unit;
 
 use Firebase\JWT\JWT;
-use Jekk0\JwtAuth\Exceptions\JwtTokenDecodeException;
+use Jekk0\JwtAuth\Contracts\CustomClaims;
+use Jekk0\JwtAuth\Exceptions\TokenDecodeException;
 use Jekk0\JwtAuth\Payload;
 use Jekk0\JwtAuth\TokenManager;
 use Jekk0\JwtAuth\TokenPair;
@@ -57,6 +58,42 @@ class TokenManagerTest extends TestCase
         self::assertTrue(is_string($result->refresh->payload->getReferenceTokenId()));
     }
 
+    public function test_make_token_pair_with_custom_claims(): void
+    {
+        $clock = $this->createMock(ClockInterface::class);
+        $timestamp = 1700000000;
+        $clock->expects($this->once())->method('now')->willReturn(new \DateTimeImmutable("@$timestamp"));
+        JWT::$timestamp = $timestamp;
+        $tokenManager = new TokenManager($clock, $this->getConfig());
+        $user = new class () extends User implements CustomClaims {
+            public int $id = 122;
+
+            public function getJwtCustomClaims(): array
+            {
+                return [
+                    'role' => 'user',
+                    'value' => 139,
+                    'otherCustom' => 'value'
+                ];
+            }
+        };
+
+        $result = $tokenManager->makeTokenPair($user);
+
+        // Access token
+        self::assertArrayHasKey('role', $result->access->payload);
+        self::assertArrayHasKey('value', $result->access->payload);
+        self::assertArrayHasKey('otherCustom', $result->access->payload);
+        self::assertSame('user', $result->access->payload['role']);
+        self::assertSame(139, $result->access->payload['value']);
+        self::assertSame('value', $result->access->payload['otherCustom']);
+
+        // Refresh token
+        self::assertArrayNotHasKey('user', $result->refresh->payload);
+        self::assertArrayNotHasKey('value', $result->refresh->payload);
+        self::assertArrayNotHasKey('otherCustom', $result->refresh->payload);
+    }
+
     public function test_decode(): void
     {
         $clock = $this->createMock(ClockInterface::class);
@@ -78,7 +115,7 @@ class TokenManagerTest extends TestCase
         $clock = $this->createMock(ClockInterface::class);
         $tokenManager = new TokenManager($clock, ['public_key' => '', 'private_key' => '', 'alg' => '']);
 
-        $this->expectException(JwtTokenDecodeException::class);
+        $this->expectException(TokenDecodeException::class);
 
         $tokenManager->decode('');
     }
@@ -88,9 +125,10 @@ class TokenManagerTest extends TestCase
         $clock = $this->createMock(ClockInterface::class);
         JWT::$timestamp = null;
         $tokenManager = new TokenManager($clock, $this->getConfig());
-        $token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.eyJpc3MiOiJKV1RBdXRoIiwic3ViIjoxLCJhdWQiOiI3OTZkYzExZTllODYwNmQwIiwibmJmIjoxNzAwMDAwMDAwLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMjU5MjAwMCwidHRwIjoicmVmcmVzaCIsImp0aSI6IjAxSk5QRjRGTVlZS1paQlFDRTVQWlZRUDFaIiwicmZpIjoiMDFKTlBGNEZNWVlLWlpCUUNFNVBaVlFQMVkifQ.tdGuVGuDox-S9gtFQ_erEGQ6AdRfPEmF8s0WWFaLhked31-elH6hXvOCyAoXyAIZ6j6LUJuosSTVc5ktdn8xBQ';
+        $token =
+            'eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.eyJpc3MiOiJKV1RBdXRoIiwic3ViIjoxLCJhdWQiOiI3OTZkYzExZTllODYwNmQwIiwibmJmIjoxNzAwMDAwMDAwLCJpYXQiOjE3MDAwMDAwMDAsImV4cCI6MTcwMjU5MjAwMCwidHRwIjoicmVmcmVzaCIsImp0aSI6IjAxSk5QRjRGTVlZS1paQlFDRTVQWlZRUDFaIiwicmZpIjoiMDFKTlBGNEZNWVlLWlpCUUNFNVBaVlFQMVkifQ.tdGuVGuDox-S9gtFQ_erEGQ6AdRfPEmF8s0WWFaLhked31-elH6hXvOCyAoXyAIZ6j6LUJuosSTVc5ktdn8xBQ';
 
-        $this->expectException(JwtTokenDecodeException::class);
+        $this->expectException(TokenDecodeException::class);
         $this->expectExceptionMessage('Expired token');
 
         $tokenManager->decode($token);
