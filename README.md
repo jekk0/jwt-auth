@@ -327,19 +327,17 @@ namespace App\Listeners;
 use Illuminate\Support\Facades\Log;
 use Jekk0\JwtAuth\Events\JwtRefreshTokenCompromised;
 use Jekk0\JwtAuth\Model\JwtRefreshToken;
-use Jekk0\JwtAuth\RefreshTokenStatus;
 
 class RefreshTokenCompromised
 {
     public function handle(JwtRefreshTokenCompromised $event): void
     {
         Log::info("Guard $event->guard: Refresh token compromised.");
-        
-        // Get affected refresh tokens
-        $affectedRefreshTokens = JwtRefreshToken::where('sub', '=', (string)$event->user->id)
-            ->where('status', '=', RefreshTokenStatus::Active)
-            ->get();
 
+        // Get all user refresh tokens
+        $affectedRefreshTokens = JwtRefreshToken::where('sub', '=', (string)$event->user->id)->get();
+
+        // If you use Access token invalidation then this step is not needed
         foreach ($affectedRefreshTokens as $refreshToken) {
             $accessTokenId = $refreshToken->access_token_jti;
 
@@ -348,14 +346,12 @@ class RefreshTokenCompromised
         }
 
         // Invalidate refresh tokens related to user
-        JwtRefreshToken::whereIn('jti', $affectedRefreshTokens->pluck('jti'))
-            ->update(['status' => RefreshTokenStatus::Compromised]);
+        JwtRefreshToken::whereIn('jti', $affectedRefreshTokens->pluck('jti'))->delete();
 
         // Send notification to user
         //...
     }
 }
-
 ```
 ## Customization
 
@@ -527,6 +523,7 @@ class CustomJwtTokenIssuer extends ServiceProvider
 9. Jekk0\JwtAuth\Events\JwtRefreshTokenDecoded
 10. Jekk0\JwtAuth\Events\JwtTokensRefreshed
 11. Jekk0\JwtAuth\Events\JwtValidated
+
 ## Functionally testing a JWT protected api
 
 **Login with Laravel's default `actingAs` method:**
