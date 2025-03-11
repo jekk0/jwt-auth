@@ -18,7 +18,9 @@ jobs:
             laravel: '12'
           - php: '8.4'
             laravel: '10'
-
+    env:
+      LARAVEL: ${{ matrix.laravel }}
+      PHP: ${{ matrix.php }}
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
     steps:
@@ -37,17 +39,16 @@ jobs:
         run: |
           composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts=^${{ matrix.laravel }}"
 
-      - name: Execute tests
-        run: vendor/bin/phpunit --coverage-clover ./coverage.xml
+      - name: Run PHPUnit tests
+        run: vendor/bin/phpunit --coverage-clover=coverage.xml
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           files: ./coverage.xml
           verbose: true
           flags: unittests
-          name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+          name: php-${{ matrix.php }}-laravel-${{ matrix.laravel }}
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
