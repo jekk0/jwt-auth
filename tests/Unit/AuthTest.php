@@ -121,11 +121,11 @@ class AuthTest extends TestCase
         $payload = new Payload([
             'iss' => '',
             'sub' => $userId,
-            'aud' => hash('xxh3', $user::class),
             'exp' => time(),
             'nbf' => time(),
             'iat' => time(),
-            'jti' => ''
+            'jti' => '',
+            'mhs' => hash('xxh3', $user::class),
         ]);
 
         $tokenManager = new TokenManager(
@@ -134,7 +134,8 @@ class AuthTest extends TestCase
                 'public_key' => 'iVUKxPqZFLMD/MLONKvXMA47Yk4uUqzSgHAHSEiBRjQ=',
                 'private_key' => 'BO2A8TxpH/g3TJqL2udi4lkDumzI6kXoz2o/NC2dRaOJVQrE+pkUswP8ws40q9cwDjtiTi5SrNKAcAdISIFGNA==',
                 'alg' => 'EdDSA',
-                'ttl' => 2592000, // in seconds (30 days)
+                'leeway' => 0,
+                'ttl' => 2592000,
                 'claims' => [
                     'iss' => 'jwt'
                 ],
@@ -158,11 +159,11 @@ class AuthTest extends TestCase
         $payload = new Payload([
             'iss' => '',
             'sub' => $userId,
-            'aud' => '',
             'exp' => time(),
             'nbf' => time(),
             'iat' => time(),
-            'jti' => ''
+            'jti' => '',
+            'mhs' => '',
         ]);
         $tokenManager = new TokenManager(
             SystemClock::fromUTC(),
@@ -170,6 +171,7 @@ class AuthTest extends TestCase
                 'public_key' => 'iVUKxPqZFLMD/MLONKvXMA47Yk4uUqzSgHAHSEiBRjQ=',
                 'private_key' => 'BO2A8TxpH/g3TJqL2udi4lkDumzI6kXoz2o/NC2dRaOJVQrE+pkUswP8ws40q9cwDjtiTi5SrNKAcAdISIFGNA==',
                 'alg' => 'EdDSA',
+                'leeway' => 0,
                 'ttl' => 2592000, // in seconds (30 days)
                 'claims' => [
                     'iss' => 'jwt'

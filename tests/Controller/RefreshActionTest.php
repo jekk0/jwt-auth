@@ -73,7 +73,7 @@ class RefreshActionTest extends TestCase
 
         self::assertSame($tokenPair->access->payload->getIssuer(), $newAccessToken->payload->getIssuer());
         self::assertSame($tokenPair->access->payload->getSubject(), $newAccessToken->payload->getSubject());
-        self::assertSame($tokenPair->access->payload->getAudience(), $newAccessToken->payload->getAudience());
+        self::assertSame($tokenPair->access->payload->getModelHash(), $newAccessToken->payload->getModelHash());
         self::assertSame($tokenPair->access->payload->getTokenType(), $newAccessToken->payload->getTokenType());
 
         // Refresh token
@@ -89,7 +89,7 @@ class RefreshActionTest extends TestCase
 
         self::assertSame($tokenPair->refresh->payload->getIssuer(), $newRefreshToken->payload->getIssuer());
         self::assertSame($tokenPair->refresh->payload->getSubject(), $newRefreshToken->payload->getSubject());
-        self::assertSame($tokenPair->refresh->payload->getAudience(), $newRefreshToken->payload->getAudience());
+        self::assertSame($tokenPair->refresh->payload->getModelHash(), $newRefreshToken->payload->getModelHash());
         self::assertSame($tokenPair->refresh->payload->getTokenType(), $newRefreshToken->payload->getTokenType());
     }
 

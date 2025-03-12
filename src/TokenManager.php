@@ -25,6 +25,7 @@ final class TokenManager implements TokenManagerContract
         private readonly ClockInterface $clock,
         private readonly array $config
     ) {
+        JWT::$leeway = $this->config['leeway'];
     }
 
     public function makeTokenPair(Authenticatable $user): TokenPair
@@ -38,9 +39,9 @@ final class TokenManager implements TokenManagerContract
         $payload = [
             'iss' => $this->tokenIssuer,
             'sub' => $user->getAuthIdentifier(),
-            'aud' => $this->hashUserModel($user::class),
             'nbf' => $now->getTimestamp(),
             'iat' => $now->getTimestamp(),
+            'mhs' => $this->hashUserModel($user::class),
         ];
 
         // TODO
@@ -50,7 +51,6 @@ final class TokenManager implements TokenManagerContract
                 'exp' => $accessTokenExpiredAt,
                 'ttp' => TokenType::Access->value,
                 'jti' => $accessTokenId,
-                // Reference token id
                 'rfi' => $refreshTokenId
             ]
         );
@@ -93,7 +93,7 @@ final class TokenManager implements TokenManagerContract
 
     public function isPayloadFor(Payload $payload, string $userClass): bool
     {
-        return $this->hashUserModel($userClass) === $payload->getAudience();
+        return $this->hashUserModel($userClass) === $payload->getModelHash();
     }
 
     public function setTokenIssuer(string $issuer): void

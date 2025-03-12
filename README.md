@@ -475,48 +475,7 @@ class CustomJwtTokenIssuer extends ServiceProvider
 }
 
 ```
-### Customize leeway
 
-If there is a need to generate JWT tokens while taking leeway into account, you can achieve this
-by replacing the default `Jekk0\JwtAuth\Contracts\Clock` binding.
-This allows you to customize how timestamps, expiration times, or issued-at claims (iat, exp, nbf)
-are handled within the token.
-
-```shell
-php artisan make:provider CustomJwtClock
-```
-
-```php
-// file /app/Providers/CustomJwtTokenIssuer.php
-
-<?php
-
-namespace App\Providers;
-
-use Illuminate\Http\Request;
-use Illuminate\Support\ServiceProvider;
-use Jekk0\JwtAuth\Contracts\Clock;
-
-class CustomJwtTokenIssuer extends ServiceProvider
-{
-    public function register(): void
-    {
-        $this->app->bind(Clock::class, function () {
-            return new class implements Clock {
-                public function now(): DateTimeImmutable {
-                    return new DateTimeImmutable('now', new \DateTimeZone('UTC'));                
-                }     
-            };
-        });
-    }
-    
-    public function boot(): void
-    {
-        //
-    }
-}
-
-```
 ### Available events:
 
 1. Jekk0\JwtAuth\Events\JwtAccessTokenDecoded
