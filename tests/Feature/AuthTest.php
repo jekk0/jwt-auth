@@ -54,10 +54,10 @@ class AuthTest extends TestCase
         $result = $this->auth->createTokenPair($user);
 
         self::assertSame($user->id, $result->access->payload->getSubject());
-        self::assertSame(hash('xxh3', $user::class), $result->access->payload->getAudience());
+        self::assertSame(hash('xxh3', $user::class), $result->access->payload->getModelHash());
 
         self::assertSame($user->id, $result->refresh->payload->getSubject());
-        self::assertSame(hash('xxh3', $user::class), $result->refresh->payload->getAudience());
+        self::assertSame(hash('xxh3', $user::class), $result->refresh->payload->getModelHash());
 
         self::assertSame($result->access->payload->getReferenceTokenId(), $result->refresh->payload->getJwtId());
         self::assertSame($result->refresh->payload->getReferenceTokenId(), $result->access->payload->getJwtId());
@@ -110,14 +110,14 @@ class AuthTest extends TestCase
     {
         $user = UserFactory::new()->create();
 
-        $result = $this->auth->retrieveByPayload(new Payload(['sub' => $user->id, 'aud' => \hash('xxh3', $user::class)]));
+        $result = $this->auth->retrieveByPayload(new Payload(['sub' => $user->id, 'mhs' => \hash('xxh3', $user::class)]));
 
         self::assertTrue($user->is($result));
     }
 
     public function test_retrieve_by_payload_user_not_found(): void
     {
-        $result = $this->auth->retrieveByPayload(new Payload(['sub' => 'id', 'aud' => 'asd']));
+        $result = $this->auth->retrieveByPayload(new Payload(['sub' => 'id', 'mhs' => 'asd']));
 
         self::assertNull($result);
     }

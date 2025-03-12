@@ -13,7 +13,7 @@ class PayloadTest extends TestCase
     {
         $issuer = 'issuer';
         $subject = 'subject';
-        $audience = User::class;
+        $modelHash = User::class;
         $expirationTime = time() + 1000;
         $notBefore = $issuedAt = time();
         $jwtId = '1234-5678-9101';
@@ -21,24 +21,24 @@ class PayloadTest extends TestCase
         $payload = new Payload([
             'iss' => $issuer,
             'sub' => $subject,
-            'aud' => $audience,
             'exp' => $expirationTime,
             'nbf' => $notBefore,
             'iat' => $issuedAt,
             'jti' => $jwtId,
             'ttp' => TokenType::Access->value,
-            'rfi' => $rfi
+            'rfi' => $rfi,
+            'mhs' => $modelHash,
         ]);
 
         self::assertSame($issuer, $payload->getIssuer());
         self::assertSame($subject, $payload->getSubject());
-        self::assertSame($audience, $payload->getAudience());
         self::assertSame($expirationTime, $payload->getExpiriedAt());
         self::assertSame($notBefore, $payload->getNotBefore());
         self::assertSame($issuedAt, $payload->getIssuedAt());
         self::assertSame($jwtId, $payload->getJwtId());
         self::assertSame(TokenType::Access, $payload->getTokenType());
         self::assertSame($rfi, $payload->getReferenceTokenId());
+        self::assertSame($modelHash, $payload->getModelHash());
     }
 
     public function test_array_offset_exists(): void

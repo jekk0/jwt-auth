@@ -50,11 +50,6 @@ final class Payload implements \ArrayAccess
         return $this->container['exp'];
     }
 
-    public function getAudience(): string
-    {
-        return $this->container['aud'];
-    }
-
     public function getNotBefore(): int
     {
         return $this->container['nbf'];
@@ -78,5 +73,10 @@ final class Payload implements \ArrayAccess
     public function getReferenceTokenId(): string
     {
         return $this->container['rfi'];
+    }
+
+    public function getModelHash(): string
+    {
+        return $this->container['mhs'];
     }
 }

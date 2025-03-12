@@ -37,7 +37,7 @@ class TokenManagerTest extends TestCase
         self::assertTrue(is_string($result->access->token));
         self::assertSame('JWTAuth', $result->access->payload->getIssuer());
         self::assertSame($id, $result->access->payload->getSubject());
-        self::assertSame(hash('xxh3', $user::class), $result->access->payload->getAudience());
+        self::assertSame(hash('xxh3', $user::class), $result->access->payload->getModelHash());
         self::assertSame($timestamp, $result->access->payload->getNotBefore());
         self::assertSame($timestamp, $result->access->payload->getIssuedAt());
         self::assertSame($timestamp + 3600, $result->access->payload->getExpiriedAt());
@@ -49,7 +49,7 @@ class TokenManagerTest extends TestCase
         self::assertTrue(is_string($result->refresh->token));
         self::assertSame('JWTAuth', $result->refresh->payload->getIssuer());
         self::assertSame($id, $result->refresh->payload->getSubject());
-        self::assertSame(hash('xxh3', $user::class), $result->refresh->payload->getAudience());
+        self::assertSame(hash('xxh3', $user::class), $result->access->payload->getModelHash());
         self::assertSame($timestamp, $result->refresh->payload->getNotBefore());
         self::assertSame($timestamp, $result->refresh->payload->getIssuedAt());
         self::assertSame($timestamp + 2592000, $result->refresh->payload->getExpiriedAt());
@@ -113,7 +113,7 @@ class TokenManagerTest extends TestCase
     public function test_decode_broken_configuration(): void
     {
         $clock = $this->createMock(ClockInterface::class);
-        $tokenManager = new TokenManager($clock, ['public_key' => '', 'private_key' => '', 'alg' => '']);
+        $tokenManager = new TokenManager($clock, ['public_key' => '', 'private_key' => '', 'alg' => '', 'leeway' => '']);
 
         $this->expectException(TokenDecodeException::class);
 
@@ -139,7 +139,7 @@ class TokenManagerTest extends TestCase
         $clock = $this->createMock(ClockInterface::class);
         JWT::$timestamp = null;
         $tokenManager = new TokenManager($clock, $this->getConfig());
-        $payload = new Payload(['aud' => hash('xxh3', User::class)]);
+        $payload = new Payload(['mhs' => hash('xxh3', User::class)]);
 
         $result = $tokenManager->isPayloadFor($payload, User::class);
 
@@ -151,7 +151,7 @@ class TokenManagerTest extends TestCase
         $clock = $this->createMock(ClockInterface::class);
         JWT::$timestamp = null;
         $tokenManager = new TokenManager($clock, $this->getConfig());
-        $payload = new Payload(['aud' => 'invalid']);
+        $payload = new Payload(['mhs' => 'invalid']);
 
         $result = $tokenManager->isPayloadFor($payload, User::class);
 
@@ -180,6 +180,7 @@ class TokenManagerTest extends TestCase
             'public_key' => 'iVUKxPqZFLMD/MLONKvXMA47Yk4uUqzSgHAHSEiBRjQ=',
             'private_key' => 'BO2A8TxpH/g3TJqL2udi4lkDumzI6kXoz2o/NC2dRaOJVQrE+pkUswP8ws40q9cwDjtiTi5SrNKAcAdISIFGNA==',
             'alg' => 'EdDSA',
+            'leeway' => 0,
             'ttl' => [
                 'access' => 3600,
                 'refresh' => 2592000,

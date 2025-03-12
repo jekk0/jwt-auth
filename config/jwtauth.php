@@ -38,6 +38,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Leeway
+    |--------------------------------------------------------------------------
+    |
+    | The leeway option allows for a small-time tolerance when validating
+    | time-based claims (exp, nbf, iat). This is useful to account for clock skew between different
+    | servers or clients, preventing tokens from being rejected due to minor time discrepancies.
+    |
+    | It is recommended that this leeway should not be bigger than a few minutes.
+    |
+    */
+    'leeway' => env('JWT_AUTH_LEEWAY', 0),
+
+    /*
+    |--------------------------------------------------------------------------
     | Tokens time to live
     |--------------------------------------------------------------------------
     |
