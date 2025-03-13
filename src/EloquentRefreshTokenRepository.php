@@ -17,7 +17,7 @@ final class EloquentRefreshTokenRepository implements RefreshTokenRepositoryCont
             [
                 'jti' => $jti,
                 'access_token_jti' => $accessTokenJti,
-                'sub' => $subject,
+                'subject' => $subject,
                 'expired_at' => $expired_at,
                 'status' => RefreshTokenStatus::Active
             ]
@@ -36,7 +36,7 @@ final class EloquentRefreshTokenRepository implements RefreshTokenRepositoryCont
 
     public function deleteAllBySubject(string $subject): void
     {
-        JwtRefreshToken::where('sub', $subject)->delete();
+        JwtRefreshToken::where('subject', $subject)->delete();
     }
 
     public function markAsUsed(string $jti): void

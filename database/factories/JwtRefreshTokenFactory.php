@@ -15,7 +15,7 @@ class JwtRefreshTokenFactory extends Factory
     /**
      * The name of the factory's corresponding model.
      *
-     * @var class-string<\Illuminate\Database\Eloquent\Model>
+     * @var class-string<\Jekk0\JwtAuth\Model\JwtRefreshToken>
      */
     protected $model = JwtRefreshToken::class;
 
@@ -29,7 +29,7 @@ class JwtRefreshTokenFactory extends Factory
         return [
             'jti' => (string)Str::ulid(),
             'access_token_jti' => (string)Str::ulid(),
-            'sub' => fake()->uuid(),
+            'subject' => fake()->uuid(),
             'expired_at' => now()->addDay(),
             'status' => RefreshTokenStatus::Active,
         ];

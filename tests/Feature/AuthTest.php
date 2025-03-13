@@ -129,7 +129,7 @@ class AuthTest extends TestCase
         $subject = 'subject';
         $expiredAt = new \DateTimeImmutable();
         JwtRefreshTokenFactory::new()->create(
-            ['jti' => $jti, 'access_token_jti' => $accessTokenJti, 'sub' => $subject, 'expired_at' => $expiredAt]
+            ['jti' => $jti, 'access_token_jti' => $accessTokenJti, 'subject' => $subject, 'expired_at' => $expiredAt]
         );
 
         $result = $this->auth->getRefreshToken($jti);
@@ -146,7 +146,7 @@ class AuthTest extends TestCase
         $subject = 'subject';
         $expiredAt = new \DateTimeImmutable();
         JwtRefreshTokenFactory::new()->create(
-            ['jti' => $jti, 'access_token_jti' => $accessTokenJti, 'sub' => $subject, 'expired_at' => $expiredAt]
+            ['jti' => $jti, 'access_token_jti' => $accessTokenJti, 'subject' => $subject, 'expired_at' => $expiredAt]
         );
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
@@ -163,9 +163,9 @@ class AuthTest extends TestCase
         $jti1 = '1';
         $jti2 = '2';
         $jti3 = '3';
-        JwtRefreshTokenFactory::new()->create(['jti' => $jti1, 'sub' => $user->id]);
-        JwtRefreshTokenFactory::new()->create(['jti' => $jti2, 'sub' => $user->id]);
-        JwtRefreshTokenFactory::new()->create(['jti' => $jti3, 'sub' => 'other-subject']);
+        JwtRefreshTokenFactory::new()->create(['jti' => $jti1, 'subject' => $user->id]);
+        JwtRefreshTokenFactory::new()->create(['jti' => $jti2, 'subject' => $user->id]);
+        JwtRefreshTokenFactory::new()->create(['jti' => $jti3, 'subject' => 'other-subject']);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 3);
         self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find($jti1)->status);

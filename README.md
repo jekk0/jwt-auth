@@ -152,7 +152,7 @@ Route::group(['prefix' => '/auth/user'], function () {
 // routes/console.php
 
 use Illuminate\Support\Facades\Schedule;
-use Jekk0\JwtAuth\Model\JwtRefreshToken
+use Jekk0\JwtAuth\Model\JwtRefreshToken;
 
 Schedule::command('model:prune', ['--model' => [JwtRefreshToken::class]])->daily();
 ```
@@ -342,7 +342,7 @@ class RefreshTokenCompromised
         Log::info("Guard $event->guard: Refresh token compromised.");
 
         // Get all user refresh tokens
-        $affectedRefreshTokens = JwtRefreshToken::where('sub', '=', (string)$event->user->id)->get();
+        $affectedRefreshTokens = JwtRefreshToken::where('subject', '=', (string)$event->user->id)->get();
 
         // If you use Access token invalidation then this step is not needed
         foreach ($affectedRefreshTokens as $refreshToken) {

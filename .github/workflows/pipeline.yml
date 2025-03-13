@@ -38,6 +38,9 @@ jobs:
         run: |
           composer update --prefer-dist --no-interaction --no-progress --with="illuminate/contracts=^${{ matrix.laravel }}"
 
+      - name: Run PHPStan analyse
+        run: vendor/bin/phpstan analyse
+
       - name: Run PHPUnit tests
         run: vendor/bin/phpunit --coverage-clover ./coverage.xml
 

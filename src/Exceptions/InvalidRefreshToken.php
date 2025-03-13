@@ -6,5 +6,4 @@ use RuntimeException;
 
 final class InvalidRefreshToken extends RuntimeException
 {
-    protected $message = 'Invalid refresh token.';
 }
