@@ -19,7 +19,7 @@ final class TokenManager implements TokenManagerContract
 
     /**
      * @param ClockInterface $clock
-     * @param array<non-empty-string, mixed> $config
+     * @param array{'public_key': string, 'private_key': string, 'alg': string, 'leeway': int, 'ttl': array{'access': int, 'refresh': int}} $config
      */
     public function __construct(
         private readonly ClockInterface $clock,

@@ -323,9 +323,9 @@ class RequestGuardTest extends TestCase
         $auth->expects($this->once())->method('decodeToken')->with($refreshToken->token)->willReturn($refreshToken);
         $auth->expects($this->once())->method('retrieveByPayload')->with($refreshToken->payload)->willReturn($user);
         $auth->expects($this->once())->method('getRefreshToken')->with($refreshToken->payload->getJwtId())->willReturn(
-            new JwtRefreshToken()
+            $model = new JwtRefreshToken()
         );
-        $auth->expects($this->once())->method('markAsUsed')->with($refreshToken->payload->getJwtId());
+        $auth->expects($this->once())->method('markAsUsed')->with($model);
         $auth->expects($this->once())->method('createTokenPair')->with($user)->willReturn(
             $tokenPair = new TokenPair(
                 new Token('jwt', new Payload(['jti' => 'new_1', 'sub' => $user->id, 'exp' => time()])),
@@ -532,9 +532,9 @@ class RequestGuardTest extends TestCase
         $auth->expects($this->once())->method('decodeToken')->with($refreshToken->token)->willReturn($refreshToken);
         $auth->expects($this->once())->method('retrieveByPayload')->with($refreshToken->payload)->willReturn($user);
         $auth->expects($this->once())->method('getRefreshToken')->with($refreshToken->payload->getJwtId())->willReturn(
-            new JwtRefreshToken(['status' => RefreshTokenStatus::Used])
+            $model = new JwtRefreshToken(['status' => RefreshTokenStatus::Used])
         );
-        $auth->expects($this->once())->method('markAsCompromised')->with($refreshToken->payload->getJwtId());
+        $auth->expects($this->once())->method('markAsCompromised')->with($model);
         $auth->expects($this->never())->method('markAsUsed');
         $auth->expects($this->never())->method('createTokenPair');
 
@@ -698,6 +698,24 @@ class RequestGuardTest extends TestCase
         $result = $guard->validate($credentials);
 
         self::assertTrue($result);
+    }
+
+    public function test_validate_user_not_found(): void
+    {
+        $credentials = ['email' => 'example.com', 'password' => '123456'];
+        $guardName = 'jwt-user';
+        $auth = $this->createMock(Auth::class);
+        $auth->expects($this->once())->method('retrieveByCredentials')->with($credentials)->willReturn(null);
+        $auth->expects($this->never())->method('hasValidCredentials');
+        $tokenExtractor = $this->createMock(TokenExtractor::class);
+        $dispatcher = $this->createMock(Dispatcher::class);
+
+        $request = Request::create('');
+        $guard = new RequestGuard($guardName, $auth, $tokenExtractor, $dispatcher, $request);
+
+        $result = $guard->validate($credentials);
+
+        self::assertFalse($result);
     }
 
     public function test_has_user_null(): void

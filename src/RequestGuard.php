@@ -84,7 +84,7 @@ final class RequestGuard implements JwtGuardContract
 
     public function logout(): void
     {
-        if ($this->user()) {
+        if ($this->user() && $this->accessToken) {
             $this->jwtAuth->revokeRefreshToken($this->accessToken->payload->getReferenceTokenId());
 
             $this->dispatcher->dispatch(new JwtLogout($this->guard, $this->user()));
@@ -127,15 +127,17 @@ final class RequestGuard implements JwtGuardContract
             }
 
             if ($model->status === RefreshTokenStatus::Used) {
-                $this->jwtAuth->markAsCompromised($decodedRefreshToken->payload->getJwtId());
+                $this->jwtAuth->markAsCompromised($model);
                 $this->dispatcher->dispatch(new JwtRefreshTokenCompromised($this->guard, $user, $decodedRefreshToken));
 
                 throw new RefreshTokenCompromised('JWT refresh token compromised.');
             }
 
             $newTokenPair = $this->login($user);
-            $this->jwtAuth->markAsUsed($decodedRefreshToken->payload->getJwtId());
-            $this->dispatcher->dispatch(new JwtTokensRefreshed($this->guard, $user, $newTokenPair, $decodedRefreshToken));
+            $this->jwtAuth->markAsUsed($model);
+            $this->dispatcher->dispatch(
+                new JwtTokensRefreshed($this->guard, $user, $newTokenPair, $decodedRefreshToken)
+            );
 
             return $newTokenPair;
         } catch (TokenDecodeException|TokenInvalidType|RefreshTokenCompromised|SubjectNotFound|InvalidRefreshToken) {
@@ -191,7 +193,12 @@ final class RequestGuard implements JwtGuardContract
      */
     public function validate(array $credentials = []): bool
     {
-        return $this->jwtAuth->hasValidCredentials($this->jwtAuth->retrieveByCredentials($credentials), $credentials);
+        $user = $this->jwtAuth->retrieveByCredentials($credentials);
+        if ($user === null) {
+            return false;
+        }
+
+        return $this->jwtAuth->hasValidCredentials($user, $credentials);
     }
 
     public function hasUser(): bool
@@ -211,8 +218,7 @@ final class RequestGuard implements JwtGuardContract
 
     public function id(): int|string|null
     {
-
-        if ($this->check()) {
+        if ($this->user() instanceof Authenticatable) {
             return $this->user()->getAuthIdentifier();
         }
 
