@@ -37,7 +37,7 @@ final class Auth implements JwtAuthContract
         return $this->userProvider->retrieveByCredentials($credentials);
     }
 
-    public function hasValidCredentials(?Authenticatable $user, array $credentials): bool
+    public function hasValidCredentials(Authenticatable $user, array $credentials): bool
     {
         return $this->userProvider->validateCredentials($user, $credentials) === true;
     }
@@ -72,20 +72,16 @@ final class Auth implements JwtAuthContract
 
     public function revokeAllRefreshTokens(Authenticatable $user): void
     {
-        $this->refreshTokenRepository->deleteAllBySubject($user->getAuthIdentifier());
+        $this->refreshTokenRepository->deleteAllBySubject((string)$user->getAuthIdentifier());
     }
 
-    // todo test
-    // todo chenge arg
-    public function markAsUsed(string $jti): void
+    public function markAsUsed(JwtRefreshToken $refreshToken): void
     {
-        $this->refreshTokenRepository->markAsUsed($jti);
+        $this->refreshTokenRepository->markAsUsed($refreshToken);
     }
 
-    // todo chenge arg
-    // todo test
-    public function markAsCompromised(string $jti): void
+    public function markAsCompromised(JwtRefreshToken $refreshToken): void
     {
-        $this->refreshTokenRepository->markAsCompromised($jti);
+        $this->refreshTokenRepository->markAsCompromised($refreshToken);
     }
 }

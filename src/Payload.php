@@ -8,7 +8,7 @@ namespace Jekk0\JwtAuth;
 final class Payload implements \ArrayAccess
 {
     /**
-     * @param array<non-empty-string, mixed> $container
+     * @param array<string, mixed> $container
      */
     public function __construct(
         private readonly array $container

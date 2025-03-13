@@ -181,12 +181,12 @@ class AuthTest extends TestCase
     public function test_mark_as_used(): void
     {
         $jti = '01JNV3HSGK8TSR3TFAYN2VBQ6F';
-        JwtRefreshTokenFactory::new()->create(['jti' => $jti]);
+        $model = JwtRefreshTokenFactory::new()->create(['jti' => $jti]);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
         self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find($jti)->status);
 
-        $this->auth->markAsUsed($jti);
+        $this->auth->markAsUsed($model);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
         self::assertSame(RefreshTokenStatus::Used, JwtRefreshToken::find($jti)->status);
@@ -195,12 +195,12 @@ class AuthTest extends TestCase
     public function test_mark_as_compromised(): void
     {
         $jti = '01JNV3HSGK8TSR3TFAYN2VBQ6F';
-        JwtRefreshTokenFactory::new()->create(['jti' => $jti]);
+        $model = JwtRefreshTokenFactory::new()->create(['jti' => $jti]);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
         self::assertSame(RefreshTokenStatus::Active, JwtRefreshToken::find($jti)->status);
 
-        $this->auth->markAsCompromised($jti);
+        $this->auth->markAsCompromised($model);
 
         $this->assertDatabaseCount(JwtRefreshToken::class, 1);
         self::assertSame(RefreshTokenStatus::Compromised, JwtRefreshToken::find($jti)->status);

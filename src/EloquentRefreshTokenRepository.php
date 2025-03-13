@@ -39,16 +39,14 @@ final class EloquentRefreshTokenRepository implements RefreshTokenRepositoryCont
         JwtRefreshToken::where('subject', $subject)->delete();
     }
 
-    public function markAsUsed(string $jti): void
+    public function markAsUsed(JwtRefreshToken $refreshToken): void
     {
-        $refreshToken = $this->get($jti);
         $refreshToken->status = RefreshTokenStatus::Used;
         $refreshToken->save();
     }
 
-    public function markAsCompromised(string $jti): void
+    public function markAsCompromised(JwtRefreshToken $refreshToken): void
     {
-        $refreshToken = $this->get($jti);
         $refreshToken->status = RefreshTokenStatus::Compromised;
         $refreshToken->save();
     }

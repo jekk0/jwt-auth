@@ -4,6 +4,7 @@ namespace Jekk0\JwtAuth;
 
 use Illuminate\Auth\AuthManager;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 use Jekk0\JwtAuth\Console\Commands\GenerateCertificates;
 use Illuminate\Support\Facades\Auth as AuthFacade;
@@ -28,6 +29,7 @@ final class JwtAuthServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(TokenManagerContract::class, static function (Application $app) {
+            /** @phpstan-ignore-next-line */
             return new TokenManager($app->get(JwtClockContract::class), $app['config']['jwtauth']);
         });
     }
@@ -54,18 +56,21 @@ final class JwtAuthServiceProvider extends ServiceProvider
     {
         AuthFacade::resolved(function (AuthManager $auth) {
             $auth->extend('jwt', function (Application $app, string $name, array $config) use ($auth) {
+                /** @var Request $request */
+                $request = $app->get('request');
                 $tokenManager = $app->get(TokenManagerContract::class);
-                $tokenManager->setTokenIssuer(($app->get(TokenIssuerContract::class))($app->get('request')));
+                $tokenManager->setTokenIssuer(($app->get(TokenIssuerContract::class))($request));
                 $guard = new RequestGuard(
                     $name,
                     new Auth(
                         $tokenManager,
+                        /** @phpstan-ignore-next-line */
                         $auth->createUserProvider($config['provider']),
                         new EloquentRefreshTokenRepository()
                     ),
                     $app->get(TokenExtractorContract::class),
                     $app->get('events'),
-                    $app->get('request')
+                    $request
                 );
 
                 return tap($guard, function (RequestGuardContract $guard) {

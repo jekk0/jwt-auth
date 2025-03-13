@@ -18,10 +18,10 @@ interface Auth
     public function retrieveByCredentials(array $credentials): ?Authenticatable;
 
     /**
-     * @param Authenticatable|null $user
+     * @param Authenticatable $user
      * @param array<non-empty-string, string> $credentials
      */
-    public function hasValidCredentials(?Authenticatable $user, array $credentials): bool;
+    public function hasValidCredentials(Authenticatable $user, array $credentials): bool;
 
     public function retrieveByPayload(Payload $payload): ?Authenticatable;
 
@@ -33,7 +33,7 @@ interface Auth
 
     public function revokeAllRefreshTokens(Authenticatable $user): void;
 
-    public function markAsUsed(string $jti): void;
+    public function markAsUsed(JwtRefreshToken $refreshToken): void;
 
-    public function markAsCompromised(string $jti): void;
+    public function markAsCompromised(JwtRefreshToken $refreshToken): void;
 }
