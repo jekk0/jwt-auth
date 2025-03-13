@@ -6,12 +6,12 @@ use Illuminate\Auth\EloquentUserProvider;
 use Jekk0\JwtAuth\Contracts\RefreshTokenRepository;
 use Jekk0\JwtAuth\Contracts\TokenManager as TokenManagerContract;
 use Jekk0\JwtAuth\Auth;
+use Jekk0\JwtAuth\JwtClock;
 use Jekk0\JwtAuth\Model\JwtRefreshToken;
 use Jekk0\JwtAuth\Payload;
 use Jekk0\JwtAuth\Token;
 use Jekk0\JwtAuth\TokenManager;
 use Jekk0\JwtAuth\TokenPair;
-use Lcobucci\Clock\SystemClock;
 use PHPUnit\Framework\TestCase;
 use Workbench\App\Models\User;
 
@@ -129,7 +129,7 @@ class AuthTest extends TestCase
         ]);
 
         $tokenManager = new TokenManager(
-            SystemClock::fromUTC(),
+            new JwtClock(new \DateTimeZone('UTC')),
             [
                 'public_key' => 'iVUKxPqZFLMD/MLONKvXMA47Yk4uUqzSgHAHSEiBRjQ=',
                 'private_key' => 'BO2A8TxpH/g3TJqL2udi4lkDumzI6kXoz2o/NC2dRaOJVQrE+pkUswP8ws40q9cwDjtiTi5SrNKAcAdISIFGNA==',
@@ -166,7 +166,7 @@ class AuthTest extends TestCase
             'mhs' => '',
         ]);
         $tokenManager = new TokenManager(
-            SystemClock::fromUTC(),
+            new JwtClock(new \DateTimeZone('UTC')),
             [
                 'public_key' => 'iVUKxPqZFLMD/MLONKvXMA47Yk4uUqzSgHAHSEiBRjQ=',
                 'private_key' => 'BO2A8TxpH/g3TJqL2udi4lkDumzI6kXoz2o/NC2dRaOJVQrE+pkUswP8ws40q9cwDjtiTi5SrNKAcAdISIFGNA==',

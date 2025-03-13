@@ -117,20 +117,20 @@ final class RequestGuard implements JwtGuardContract
             $user = $this->jwtAuth->retrieveByPayload($decodedRefreshToken->payload);
 
             if ($user === null) {
-                throw new SubjectNotFound();
+                throw new SubjectNotFound('JWT subject not found.');
             }
 
             $model = $this->jwtAuth->getRefreshToken($decodedRefreshToken->payload->getJwtId());
 
             if ($model == null || $model->status == RefreshTokenStatus::Compromised) {
-                throw new InvalidRefreshToken();
+                throw new InvalidRefreshToken('Invalid refresh token.');
             }
 
             if ($model->status === RefreshTokenStatus::Used) {
                 $this->jwtAuth->markAsCompromised($decodedRefreshToken->payload->getJwtId());
                 $this->dispatcher->dispatch(new JwtRefreshTokenCompromised($this->guard, $user, $decodedRefreshToken));
 
-                throw new RefreshTokenCompromised();
+                throw new RefreshTokenCompromised('JWT refresh token compromised.');
             }
 
             $newTokenPair = $this->login($user);

@@ -12,7 +12,6 @@ use Jekk0\JwtAuth\Contracts\TokenIssuer as TokenIssuerContract;
 use Jekk0\JwtAuth\Contracts\RequestGuard as RequestGuardContract;
 use Jekk0\JwtAuth\Contracts\TokenManager as TokenManagerContract;
 use Jekk0\JwtAuth\Contracts\Clock as JwtClockContract;
-use Lcobucci\Clock\SystemClock;
 
 final class JwtAuthServiceProvider extends ServiceProvider
 {
@@ -25,7 +24,7 @@ final class JwtAuthServiceProvider extends ServiceProvider
         $this->app->bind(TokenExtractorContract::class, TokenExtractor::class);
         $this->app->bind(TokenIssuerContract::class, TokenIssuer::class);
         $this->app->bind(JwtClockContract::class, static function () {
-            return SystemClock::fromUTC();
+            return new JwtClock(new \DateTimeZone('UTC'));
         });
 
         $this->app->singleton(TokenManagerContract::class, static function (Application $app) {

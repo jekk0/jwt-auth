@@ -28,7 +28,7 @@ class RefreshTokenTest extends TestCase
             [
                 'jti' => '01JNV3PEN545PQPN6FQC8F6C39',
                 'access_token_jti' => '01JNV3Q6DEF81VT704ZEX2ADXX',
-                'sub' => 'a',
+                'subject' => 'a',
                 'expired_at' => now()->subDay(),
                 'status' => RefreshTokenStatus::Active
             ]
@@ -37,7 +37,7 @@ class RefreshTokenTest extends TestCase
             [
                 'jti' => '01JNV3PEN5V6HWPJJ65MHG9KGQ',
                 'access_token_jti' => '01JNV3Q6DEJCKYX6C0B2838KNQ',
-                'sub' => 'b',
+                'subject' => 'b',
                 'expired_at' => now()->subWeek(),
                 'status' => RefreshTokenStatus::Active
             ]
@@ -46,7 +46,7 @@ class RefreshTokenTest extends TestCase
             [
                 'jti' => '01JNV3PEN5193ED0H2HWHVMY7J',
                 'access_token_jti' => '01JNV3Q6DE1T6SAW6ERFAFQ59B',
-                'sub' => 'c',
+                'subject' => 'c',
                 'expired_at' => now()->addDay(),
                 'status' => RefreshTokenStatus::Active
             ]
@@ -61,7 +61,7 @@ class RefreshTokenTest extends TestCase
         $token = JwtRefreshToken::find('01JNV3PEN5193ED0H2HWHVMY7J');
         self::assertSame('01JNV3PEN5193ED0H2HWHVMY7J', $token->jti);
         self::assertSame('01JNV3Q6DE1T6SAW6ERFAFQ59B', $token->access_token_jti);
-        self::assertSame('c', $token->sub);
+        self::assertSame('c', $token->subject);
         self::assertSame(RefreshTokenStatus::Active, $token->status);
     }
 

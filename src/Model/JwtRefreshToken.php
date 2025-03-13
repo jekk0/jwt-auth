@@ -7,6 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\MassPrunable;
 use Jekk0\JwtAuth\RefreshTokenStatus;
 
+/**
+ * @property string $jti
+ * @property string $access_token_jti
+ * @property string $subject
+ * @property \DateTime $expired_at
+ * @property RefreshTokenStatus $status
+ */
 final class JwtRefreshToken extends Model
 {
     use HasUlids;
@@ -23,7 +30,7 @@ final class JwtRefreshToken extends Model
     protected $fillable = [
         'jti',
         'access_token_jti',
-        'sub',
+        'subject',
         'expired_at',
         'status'
     ];
