@@ -35,7 +35,7 @@ final class JwtAuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if ($this->app->runningInConsole()) {
-            /** @phpstan-ignore-line */
+            /** @phpstan-ignore-next-line */
             $publishesMigrationsMethod = method_exists($this, 'publishesMigrations')
                 ? 'publishesMigrations' : 'publishes';
 
