@@ -700,6 +700,24 @@ class RequestGuardTest extends TestCase
         self::assertTrue($result);
     }
 
+    public function test_validate_user_not_found(): void
+    {
+        $credentials = ['email' => 'example.com', 'password' => '123456'];
+        $guardName = 'jwt-user';
+        $auth = $this->createMock(Auth::class);
+        $auth->expects($this->once())->method('retrieveByCredentials')->with($credentials)->willReturn(null);
+        $auth->expects($this->never())->method('hasValidCredentials');
+        $tokenExtractor = $this->createMock(TokenExtractor::class);
+        $dispatcher = $this->createMock(Dispatcher::class);
+
+        $request = Request::create('');
+        $guard = new RequestGuard($guardName, $auth, $tokenExtractor, $dispatcher, $request);
+
+        $result = $guard->validate($credentials);
+
+        self::assertFalse($result);
+    }
+
     public function test_has_user_null(): void
     {
         $guardName = 'jwt-user';
