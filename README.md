@@ -5,7 +5,6 @@
 [![Latest Stable Version](https://poser.pugx.org/jekk0/jwt-auth/v/stable)](https://packagist.org/packages/jekk0/jwt-auth)
 [![Total Downloads](https://poser.pugx.org/jekk0/jwt-auth/downloads)](https://packagist.org/packages/jekk0/jwt-auth)
 [![PHP Version Require](http://poser.pugx.org/jekk0/jwt-auth/require/php)](https://packagist.org/packages/jekk0/jwt-auth)
-[![License](http://poser.pugx.org/jekk0/jwt-auth/license)](https://packagist.org/packages/jekk0/jwt-auth)
 
 ## Installation
 
@@ -103,7 +102,7 @@ class UserAuthController
 
     public function refresh(Request $request): JsonResponse
     {
-        $tokens = auth('jwt-user')->refreshTokens($request->get('token', ''));
+        $tokens = auth('jwt-user')->refreshTokens((string)$request->get('token'));
 
         return new JsonResponse($tokens->toArray());
     }
