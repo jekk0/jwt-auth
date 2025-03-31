@@ -499,10 +499,7 @@ class CustomJwtTokenIssuer extends ServiceProvider
 public function test_authenticate_in_tests(): void
 {
     $user = UserFactory::new()->create();
-    $response = $this->actingAs($user, 'YOUR-GUARD-NAME')->postJson(
-        '/api/profile',
-        ['origin' => config('app.url')],
-    );
+    $response = $this->actingAs($user, 'YOUR-GUARD-NAME')->postJson('/api/profile');
 
     self::assertSame(200, $response->getStatusCode());
 }
@@ -516,7 +513,21 @@ public function test_logout(): void
     $user = UserFactory::new()->create();
     auth('user')->login($user);
     
-    $response = $this->postJson('/api/logout', ['origin' => config('app.url')],);
+    $response = $this->postJson('/api/logout');
+    self::assertSame(200, $response->getStatusCode());
+}
+```
+
+**or**
+
+```php
+public function test_logout(): void
+{
+    $user = UserFactory::new()->create();
+    $tokenPair = auth($guard)->login($user);
+
+    $response = $this->getJson('/api/profile', ['Authorization' => 'Bearer ' . $tokenPair->access->token]);    
+
     self::assertSame(200, $response->getStatusCode());
 }
 ```
@@ -538,3 +549,8 @@ public function test_authenticate(): void
         self::assertSame(200, $response->getStatusCode());
     }
 ```
+
+# Examples
+
+- ### [Laravel separated user auth example application](https://github.com/jekk0/laravel-separated-user-auth-example)
+    It demonstrates a role-based authentication system where different user types (User, Admin, Company) are stored separately in the database.
